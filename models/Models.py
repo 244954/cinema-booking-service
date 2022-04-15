@@ -88,6 +88,8 @@ class Client_Accounts(db.Model):
     email = Column('email', Text, nullable=False)
     phone_number = Column('phone_number', Text, nullable=True)
 
+    booking = relationship('Bookings', foreign_keys='Client_Accounts.client_id')
+
     def __init__(self, client_id, login, password, loyalty_points, birth_date, email, phone_number):
         self.client_id = client_id
         self.login = login
@@ -100,7 +102,7 @@ class Client_Accounts(db.Model):
 
 class Bookings(db.Model):
     __tabname__ = 'Bookings'
-    booking_id = Column('booking_id', Integer, nullable=False)
+    booking_id = Column('booking_id', Integer, primary_key=True, nullable=False)
     client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=False)
 
     client = relationship('Client_Accounts', backref='Bookings.client_id',
@@ -120,7 +122,8 @@ class Tickets(db.Model):
     price = Column('price', Numeric, nullable=False)
     purchase_date = Column('purchase_date', TIMESTAMP(timezone=True), nullable=False)
     booking_date = Column('booking_date', TIMESTAMP(timezone=False), server_default=func.now(), nullable=False)
-    client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=True)  # ?
+    client_id = Column('client_id', Integer, nullable=True)  # ?
+    #  client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=True)  # ?
 
     showing = relationship('Tickets_For_Showings', backref='Tickets_For_Showings.ticket_id',
                            primaryjoin='Tickets.ticket_id==Tickets_For_Showings.ticket_id',
@@ -138,8 +141,8 @@ class Tickets(db.Model):
 
 class Tickets_For_Showings(db.Model):
     __tabname__ = 'Tickets_For_Showings'
-    showing_id = Column('showing_id', Integer, ForeignKey(Showings.showing_id), nullable=False)
-    ticket_id = Column('ticket_id', Integer, ForeignKey(Tickets.ticket_id), nullable=False)
+    showing_id = Column('showing_id', Integer, ForeignKey(Showings.showing_id), primary_key=True, nullable=False)
+    ticket_id = Column('ticket_id', Integer, ForeignKey(Tickets.ticket_id), primary_key=True, nullable=False)
 
     showing = relationship('Showings', foreign_keys='Tickets_For_Showings.showing_id')
     ticket = relationship('Tickets', foreign_keys='Tickets_For_Showings.ticket_id')
