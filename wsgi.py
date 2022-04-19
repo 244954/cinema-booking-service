@@ -2,6 +2,8 @@ from flask import Flask, request, Response, make_response, jsonify
 from flask_cors import CORS, cross_origin
 from models.Models import db
 from utils.Response_codes import *
+from transactions.Offer import *
+from transactions.Booking import *
 import json
 
 app = Flask(__name__)
@@ -25,6 +27,14 @@ db.init_app(app)
 def booking():
     if request.method == 'POST':
         return Response(status=Status_code_ok)
+    else:
+        return Response(status=Status_code_not_found)
+
+
+@app.route('/offer', methods=['POST'])
+def offer():
+    if request.method == 'POST':
+        return halls_post(db, request)
     else:
         return Response(status=Status_code_not_found)
 

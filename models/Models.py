@@ -59,7 +59,7 @@ class Showings(db.Model):
 
     halls = relationship('Halls', foreign_keys='Showings.hall_id')
     ticket = relationship('Tickets_For_Showings', backref='Tickets_For_Showings.showing_id',
-                          primaryjoin='Showings.ticket_id==Tickets_For_Showings.showing_id',
+                          primaryjoin='Showings.showing_id==Tickets_For_Showings.showing_id',
                           lazy='dynamic', cascade="all,delete")
 
     def __init__(self, showing_id, showing_date, hall_id, movie_id, subtitles, dubbing, lector, movie_language,
@@ -88,7 +88,9 @@ class Client_Accounts(db.Model):
     email = Column('email', Text, nullable=False)
     phone_number = Column('phone_number', Text, nullable=True)
 
-    booking = relationship('Bookings', foreign_keys='Client_Accounts.client_id')
+    booking = relationship('Bookings', backref='Bookings.client_id',
+                           primaryjoin='Client_Accounts.client_id==Bookings.client_id',
+                           lazy='dynamic')
 
     def __init__(self, client_id, login, password, loyalty_points, birth_date, email, phone_number):
         self.client_id = client_id
@@ -105,9 +107,7 @@ class Bookings(db.Model):
     booking_id = Column('booking_id', Integer, primary_key=True, nullable=False)
     client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=False)
 
-    client = relationship('Client_Accounts', backref='Bookings.client_id',
-                          primaryjoin='Client_Accounts.client_id==Bookings.client_id',
-                          lazy='dynamic')
+    client = relationship('Client_Accounts', foreign_keys='Bookings.client_id')
 
     def __init__(self, booking_id, client_id):
         self.booking_id = booking_id
