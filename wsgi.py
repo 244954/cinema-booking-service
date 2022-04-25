@@ -31,10 +31,18 @@ def booking():
         return Response(status=Status_code_not_found)
 
 
-@app.route('/offer', methods=['POST'])
-def offer():
+@app.route('/offer/halls', methods=['POST'])
+def offer_halls():
     if request.method == 'POST':
         return halls_post(db, request)
+    else:
+        return Response(status=Status_code_not_found)
+
+
+@app.route('/offer/seats', methods=['POST'])
+def offer_seats():
+    if request.method == 'POST':
+        return seats_post(db, request)
     else:
         return Response(status=Status_code_not_found)
 
@@ -42,5 +50,5 @@ def offer():
 if __name__ == '__main__':
     with app.app_context():
         #  db.drop_all()
-        db.create_all()
+        #  db.create_all()
         app.run(debug=True)
