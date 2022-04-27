@@ -28,7 +28,7 @@ def booking():
     if request.method == 'POST':
         return Response(status=Status_code_ok)
     else:
-        return Response(status=Status_code_not_found)
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
 @app.route('/offer/halls', methods=['POST'])
@@ -36,7 +36,7 @@ def offer_halls():
     if request.method == 'POST':
         return halls_post(db, request)
     else:
-        return Response(status=Status_code_not_found)
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
 @app.route('/offer/seats', methods=['POST'])
@@ -44,7 +44,7 @@ def offer_seats():
     if request.method == 'POST':
         return seats_post(db, request)
     else:
-        return Response(status=Status_code_not_found)
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
 @app.route('/offer/showings', methods=['POST'])
@@ -52,7 +52,7 @@ def offer_showings():
     if request.method == 'POST':
         return showings_post(db, request)
     else:
-        return Response(status=Status_code_not_found)
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
 @app.route('/showings/<movie_id>', methods=['GET'])
@@ -68,7 +68,31 @@ def showings(movie_id):
         return get_showings(db, request, from_date, to_date, movie_id, movie_language, dubbing_language,
                             subtitles_language, lector_language, age_limit)
     else:
-        return Response(status=Status_code_not_found)
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/showings/detail/<showing_id>', methods=['GET'])
+def showings_detail(showing_id):
+    if request.method == 'GET':
+        return generate_response('Endpoint not yet implemented', Status_code_not_found)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/select_seats', methods=['POST'])
+def select_seats():
+    if request.method == 'POST':
+        return generate_response('Endpoint not yet implemented', Status_code_not_found)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/payment_completed/<successful>', methods=['PUT'])
+def select_seats(successful):
+    if request.method == 'PUT':
+        return generate_response('Endpoint not yet implemented', Status_code_not_found)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
 if __name__ == '__main__':
