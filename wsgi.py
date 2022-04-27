@@ -13,7 +13,7 @@ ENV = 'prod'
 
 if ENV == 'dev':
     app.debug = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Spanko123@localhost/cinema-booking-service'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Spanko123@localhost/cinema-booking-service'  # don't get excited, not my actual password for anything else
 else:
     app.debug = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://zvbrepbrzinmob:353756c35468cb6c43a142b686d2f9120dfcc88968d95aeeb7a0e33fbcb5c542@ec2-52-18-116-67.eu-west-1.compute.amazonaws.com:5432/dddakce3tomshd'
@@ -51,6 +51,22 @@ def offer_seats():
 def offer_showings():
     if request.method == 'POST':
         return showings_post(db, request)
+    else:
+        return Response(status=Status_code_not_found)
+
+
+@app.route('/showings/<movie_id>', methods=['GET'])
+def showings(movie_id):
+    if request.method == 'GET':  # here goes plenty of query parameters
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        movie_language = request.args.get('movie_language')
+        dubbing_language = request.args.get('dubbing_language')
+        subtitles_language = request.args.get('subtitles_language')
+        lector_language = request.args.get('lector_language')
+        age_limit = request.args.get('age_limit')
+        return get_showings(db, request, from_date, to_date, movie_id, movie_language, dubbing_language,
+                            subtitles_language, lector_language, age_limit)
     else:
         return Response(status=Status_code_not_found)
 

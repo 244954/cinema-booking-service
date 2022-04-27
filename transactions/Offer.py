@@ -3,6 +3,7 @@ from flask import request, Response, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from utils.Generators import generate_response
 from utils.Response_codes import *
+import datetime
 
 
 def halls_post(db: SQLAlchemy, post_request: request) -> Response:
@@ -140,7 +141,7 @@ def showings_post(db: SQLAlchemy, post_request: request) -> Response:
         if found_showing:
             message_list.append({'msg': 'Object already exists', 'id': parameters[showing_id]})
         else:
-            showing = Showings(showing_id=parameters[showing_id], showing_date=parameters[showing_date],
+            showing = Showings(showing_id=parameters[showing_id], showing_date=datetime.datetime.fromtimestamp(parameters[showing_date]),
                                hall_id=parameters[hall_id], movie_id=parameters[movie_id],
                                subtitles=parameters[subtitles], dubbing=parameters[dubbing], lector=parameters[lector],
                                movie_language=parameters[movie_language], subtitles_language=parameters[subtitles_language],
