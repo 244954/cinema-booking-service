@@ -88,7 +88,7 @@ def select_seats():
 
 
 @app.route('/payment_completed/<successful>', methods=['PUT'])
-def select_seats(successful):
+def payment_completed(successful):
     if request.method == 'PUT':
         return generate_response('Endpoint not yet implemented', Status_code_not_found)
     else:
