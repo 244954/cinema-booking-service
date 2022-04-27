@@ -47,6 +47,14 @@ def offer_seats():
         return Response(status=Status_code_not_found)
 
 
+@app.route('/offer/showings', methods=['POST'])
+def offer_showings():
+    if request.method == 'POST':
+        return showings_post(db, request)
+    else:
+        return Response(status=Status_code_not_found)
+
+
 if __name__ == '__main__':
     with app.app_context():
         #  db.drop_all()
