@@ -5,6 +5,7 @@ from utils.Response_codes import *
 from transactions.Offer import *
 from transactions.Booking import *
 import json
+import py_eureka_client.eureka_client as eureka_client
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -21,6 +22,9 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
 db.init_app(app)
+
+eureka_client.init(eureka_server="https://eureka-server-cinema.herokuapp.com/eureka",
+                   app_name="cinema-booking-service")
 
 
 @app.route('/booking', methods=['POST'])
