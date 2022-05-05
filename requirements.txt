@@ -8,6 +8,7 @@ gunicorn==20.1.0
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
+pika==1.1.0
 psycopg2==2.8.6
 psycopg2-binary==2.8.6
 py_eureka_client==0.10.5

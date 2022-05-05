@@ -1,30 +1,70 @@
-from flask import Flask, request, Response, make_response, jsonify
-from flask_cors import CORS, cross_origin
-from models.Models import db
-from utils.Response_codes import *
-from transactions.Offer import *
-from transactions.Booking import *
-import json
+import logging
+import os
+import pika
 import py_eureka_client.eureka_client as eureka_client
+from flask import Flask
+from models.Models import db
+from transactions.Booking import *
+from transactions.Offer import *
+from threading import Thread
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
 
-ENV = 'prod'
+def config_app(env, sqlalchemy_db):
+    new_app = Flask(__name__)
+    new_app.config['SECRET_KEY'] = 'secret!'
 
-if ENV == 'dev':
-    app.debug = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Spanko123@localhost/cinema-booking-service'  # don't get excited, not my actual password for anything else
-else:
-    app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://zvbrepbrzinmob:353756c35468cb6c43a142b686d2f9120dfcc88968d95aeeb7a0e33fbcb5c542@ec2-52-18-116-67.eu-west-1.compute.amazonaws.com:5432/dddakce3tomshd'
+    if env == 'dev':
+        new_app.debug = True
+        new_app.config[
+            'SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Spanko123@localhost/cinema-booking-service'  # don't get excited, not my actual password for anything else
+    else:
+        new_app.debug = False
+        new_app.config[
+            'SQLALCHEMY_DATABASE_URI'] = 'postgres://zvbrepbrzinmob:353756c35468cb6c43a142b686d2f9120dfcc88968d95aeeb7a0e33fbcb5c542@ec2-52-18-116-67.eu-west-1.compute.amazonaws.com:5432/dddakce3tomshd'
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['CORS_HEADERS'] = 'Content-Type'
-db.init_app(app)
+    new_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    new_app.config['CORS_HEADERS'] = 'Content-Type'
+    sqlalchemy_db.init_app(new_app)
 
-eureka_client.init(eureka_server="https://eureka-server-cinema.herokuapp.com/eureka",
-                   app_name="cinema-booking-service")
+    return new_app
+
+
+def config_eureka():
+    eureka_client.init(eureka_server="https://eureka-server-cinema.herokuapp.com/eureka",
+                       app_name="cinema-booking-service")
+
+
+def config_mqrabbit():
+    logging.basicConfig()
+
+    # Parse CLODUAMQP_URL (fallback to localhost)
+    url = os.environ.get('CLOUDAMQP_URL',
+                         'amqps://wkopublf:3ry2ohNtiaf2nYC-QTzFYO3MQioPMXja@bonobo.rmq.cloudamqp.com/wkopublf')
+    params = pika.URLParameters(url)
+    params.socket_timeout = 5
+
+    connection = pika.BlockingConnection(params)  # Connect to CloudAMQP
+    channel_cancel_reservation_send = connection.channel()  # start a channel
+    channel_cancel_reservation_send.queue_declare(queue='cancel-reservation', durable=True)  # Declare a queue
+
+    #  how to publish message to MQRabbit customer
+    #  channel.basic_publish(exchange='', routing_key='cancel-reservation', body='User information')
+
+    channel_cancel_reservation_receive = connection.channel()  # start a channel
+    channel_cancel_reservation_receive.queue_declare(queue='cancel-reservation', durable=True)  # Declare a queue
+
+    # set up subscription on the queue
+    channel_cancel_reservation_receive.basic_consume('cancel-reservation',
+                                                     cancel_reservation,
+                                                     auto_ack=True)
+    return channel_cancel_reservation_send, channel_cancel_reservation_receive
+
+
+def cancel_reservation(ch, method, properties, body):
+    new_endpoint_for_cancelation(body)
+
+
+app = config_app('prod', db)
 
 
 @app.route('/booking', methods=['POST'])
@@ -99,8 +139,16 @@ def payment_completed(successful):
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
+def new_endpoint_for_cancelation(body):
+    print(body)
+
+
 if __name__ == '__main__':
+    config_eureka()
+    channel1, channel2 = config_mqrabbit()
     with app.app_context():
         #  db.drop_all()
         #  db.create_all()
+        thread = Thread(target=channel2.start_consuming)
+        thread.start()
         app.run(debug=True)
