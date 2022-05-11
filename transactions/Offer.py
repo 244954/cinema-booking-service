@@ -4,15 +4,17 @@ from flask_sqlalchemy import SQLAlchemy
 from utils.Generators import generate_response
 from utils.Response_codes import *
 import datetime
+import json
+from jsonschema import validate, ValidationError
 
 
 def halls_post(db: SQLAlchemy, post_request: request) -> Response:
     try:
-        json = post_request.get_json()
+        incoming_json = post_request.get_json()
     except Exception as ex:
         return generate_response('Malformed JSON data', Status_code_bad_request)
 
-    if not json:
+    if not incoming_json:
         return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
 
     hall_id = 'hall_id'
@@ -21,9 +23,9 @@ def halls_post(db: SQLAlchemy, post_request: request) -> Response:
     mandatory_parameters = [hall_id, cinema_id, hall_name]
     message_list = []
 
-    if 'halls' not in json:
+    if 'halls' not in incoming_json:
         return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
-    halls_list = json['halls']
+    halls_list = incoming_json['halls']
 
     for obj in halls_list:
         parameters = {}
@@ -50,11 +52,11 @@ def halls_post(db: SQLAlchemy, post_request: request) -> Response:
 
 def seats_post(db: SQLAlchemy, post_request: request) -> Response:
     try:
-        json = post_request.get_json()
+        incoming_json = post_request.get_json()
     except Exception as ex:
         return generate_response('Malformed JSON data', Status_code_bad_request)
 
-    if not json:
+    if not incoming_json:
         return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
 
     seat_id = 'seat_id'
@@ -64,9 +66,9 @@ def seats_post(db: SQLAlchemy, post_request: request) -> Response:
     mandatory_parameters = [seat_id, hall_id, row_number, seat_number]
     message_list = []
 
-    if 'seats' not in json:
+    if 'seats' not in incoming_json:
         return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
-    seats_list = json['seats']
+    seats_list = incoming_json['seats']
 
     for obj in seats_list:
         parameters = {}
@@ -93,12 +95,16 @@ def seats_post(db: SQLAlchemy, post_request: request) -> Response:
 
 def showings_post(db: SQLAlchemy, post_request: request) -> Response:
     try:
-        json = post_request.get_json()
+        incoming_json = post_request.get_json()
     except Exception as ex:
         return generate_response('Malformed JSON data', Status_code_bad_request)
 
-    if not json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
+    with open('jsonschemas/schowings_post_schema.json') as validator_file:
+        json_validator = json.load(validator_file)
+        try:
+            validate(incoming_json, schema=json_validator)
+        except ValidationError as err:
+            return generate_response(err.message, Status_code_bad_request)
 
     showing_id = 'showing_id'
     showing_date = 'showing_date'
@@ -118,19 +124,15 @@ def showings_post(db: SQLAlchemy, post_request: request) -> Response:
     optional_parameters = [subtitles, dubbing, lector, subtitles_language, lector_language, dubbing_language]
     message_list = []
 
-    if 'showings' not in json:
+    if 'showings' not in incoming_json:
         return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
-    showings_list = json['showings']
+    showings_list = incoming_json['showings']
 
     for obj in showings_list:
         parameters = {}
         for name in mandatory_parameters:
             if name in obj:
                 parameters[name] = obj[name]
-            else:
-                db.session.rollback()
-                db.session.close()
-                return generate_response('Mandatory {} parameter missing'.format(name), Status_code_invalid_data)
         for name in optional_parameters:
             if name in obj:
                 parameters[name] = obj[name]
