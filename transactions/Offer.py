@@ -14,8 +14,12 @@ def halls_post(db: SQLAlchemy, post_request: request) -> Response:
     except Exception as ex:
         return generate_response('Malformed JSON data', Status_code_bad_request)
 
-    if not incoming_json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
+    with open('jsonschemas/halls_post_schema.json') as validator_file:
+        json_validator = json.load(validator_file)
+        try:
+            validate(incoming_json, schema=json_validator)
+        except ValidationError as err:
+            return generate_response(err.message, Status_code_bad_request)
 
     hall_id = 'hall_id'
     cinema_id = 'cinema_id'
@@ -23,8 +27,6 @@ def halls_post(db: SQLAlchemy, post_request: request) -> Response:
     mandatory_parameters = [hall_id, cinema_id, hall_name]
     message_list = []
 
-    if 'halls' not in incoming_json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
     halls_list = incoming_json['halls']
 
     for obj in halls_list:
@@ -32,10 +34,6 @@ def halls_post(db: SQLAlchemy, post_request: request) -> Response:
         for name in mandatory_parameters:
             if name in obj:
                 parameters[name] = obj[name]
-            else:
-                db.session.rollback()
-                db.session.close()
-                return generate_response('Mandatory {} parameter missing'.format(name), Status_code_invalid_data)
 
         found_hall = Halls.query.filter_by(hall_id=parameters[hall_id]).first()
         if found_hall:
@@ -56,8 +54,12 @@ def seats_post(db: SQLAlchemy, post_request: request) -> Response:
     except Exception as ex:
         return generate_response('Malformed JSON data', Status_code_bad_request)
 
-    if not incoming_json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
+    with open('jsonschemas/seats_post_schema.json') as validator_file:
+        json_validator = json.load(validator_file)
+        try:
+            validate(incoming_json, schema=json_validator)
+        except ValidationError as err:
+            return generate_response(err.message, Status_code_bad_request)
 
     seat_id = 'seat_id'
     hall_id = 'hall_id'
@@ -66,8 +68,6 @@ def seats_post(db: SQLAlchemy, post_request: request) -> Response:
     mandatory_parameters = [seat_id, hall_id, row_number, seat_number]
     message_list = []
 
-    if 'seats' not in incoming_json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
     seats_list = incoming_json['seats']
 
     for obj in seats_list:
@@ -75,10 +75,6 @@ def seats_post(db: SQLAlchemy, post_request: request) -> Response:
         for name in mandatory_parameters:
             if name in obj:
                 parameters[name] = obj[name]
-            else:
-                db.session.rollback()
-                db.session.close()
-                return generate_response('Mandatory {} parameter missing'.format(name), Status_code_invalid_data)
 
         found_seat = Seats.query.filter_by(seat_id=parameters[seat_id]).first()
         if found_seat:

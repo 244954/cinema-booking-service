@@ -46,5 +46,6 @@ def get_showings(db: SQLAlchemy, post_request: request, from_date, to_date, movi
         data = e.parse_sqlalchemy_object(u)
         for t in data:
             jsonlist.append(t)
-    response = make_response(jsonify(jsonlist), Status_code_ok)
+    response_list = {"showings": jsonlist}
+    response = make_response(jsonify(response_list), Status_code_ok)
     return response

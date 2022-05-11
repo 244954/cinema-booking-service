@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://cinema-booking-service.herokuapp.com/halls_post",
+  "title": "Halls Post",
+  "description": "New halls to insert into database",
+  "type": "object",
+  "properties": {
+    "halls": {
+      "description": "List of halls",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hall_id": {
+            "type": "number"
+          },
+          "cinema_id": {
+            "type": "number"
+          },
+          "hall_name": {
+            "type": "string"
+          }
+        },
+        "required": ["hall_id", "cinema_id", "hall_name"]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    }
+  },
+  "required": ["halls"]
+}
