@@ -34,6 +34,9 @@ class Seats(db.Model):
     seat_number = Column('seat_number', Integer, nullable=False)
 
     halls = relationship('Halls', foreign_keys='Seats.hall_id')
+    tickets = relationship('Tickets', backref='Tickets.seat_id',
+                           primaryjoin='Seats.seat_id==Tickets.seat_id',
+                           lazy='dynamic', cascade="all,delete")
 
     def __init__(self, seat_id, hall_id, row_number, seat_number):
         self.seat_id = seat_id
@@ -125,6 +128,7 @@ class Tickets(db.Model):
     client_id = Column('client_id', Integer, nullable=True)  # ?
     #  client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=True)  # ?
 
+    seats = relationship('Seats', foreign_keys='Tickets.seat_id')
     showing = relationship('Tickets_For_Showings', backref='Tickets_For_Showings.ticket_id',
                            primaryjoin='Tickets.ticket_id==Tickets_For_Showings.ticket_id',
                            lazy='dynamic', cascade="all,delete")

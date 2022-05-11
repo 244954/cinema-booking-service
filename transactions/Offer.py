@@ -120,8 +120,6 @@ def showings_post(db: SQLAlchemy, post_request: request) -> Response:
     optional_parameters = [subtitles, dubbing, lector, subtitles_language, lector_language, dubbing_language]
     message_list = []
 
-    if 'showings' not in incoming_json:
-        return generate_response('Provided list is empty. No data provided', Status_code_nothing_found)
     showings_list = incoming_json['showings']
 
     for obj in showings_list:

@@ -1,10 +1,11 @@
-from models.Models import Showings, Tickets_For_Showings
+from models.Models import Showings, Tickets_For_Showings, Seats, Tickets
 from flask import request, Response, jsonify, make_response
 from sqlalchemy import and_, func
 from flask_sqlalchemy import SQLAlchemy
 from utils.Generators import generate_response
 from utils.Response_codes import *
 from utils.AlchemyEncoder import AlchemyEncoder
+from utils.Others import seat_taken
 import datetime
 
 
@@ -47,5 +48,30 @@ def get_showings(db: SQLAlchemy, post_request: request, from_date, to_date, movi
         for t in data:
             jsonlist.append(t)
     response_list = {"showings": jsonlist}
+    response = make_response(jsonify(response_list), Status_code_ok)
+    return response
+
+
+def get_showing_detail(db: SQLAlchemy, post_request: request, showing_id):
+    found_showing = Showings.query.filter_by(showing_id=showing_id).first()
+    if found_showing is None:
+        generate_response('Showing with id {} not found'.format(showing_id), Status_code_not_found)
+
+    hall_id = found_showing.hall_id
+    found_seats = Seats.query.outerjoin(Tickets).with_entities(
+        Seats.seat_id.label('seat_id'),
+        Seats.hall_id.label('hall_id'),
+        Seats.row_number.label('row_number'),
+        Seats.seat_number.label('seat_number'),
+        func.count(Tickets.ticket_id).label('tickets')
+    ).group_by(Seats).filter(Seats.hall_id == hall_id).all()
+
+    e = AlchemyEncoder()
+    jsonlist = []
+    for u in found_seats:
+        data = e.parse_sqlalchemy_object(u)
+        for t in data:
+            jsonlist.append(t)
+    response_list = {"seats": jsonlist}
     response = make_response(jsonify(response_list), Status_code_ok)
     return response

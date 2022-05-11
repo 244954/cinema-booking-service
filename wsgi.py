@@ -118,7 +118,7 @@ def showings(movie_id):
 @app.route('/showings/detail/<showing_id>', methods=['GET'])
 def showings_detail(showing_id):
     if request.method == 'GET':
-        return generate_response('Endpoint not yet implemented', Status_code_not_found)
+        return get_showing_detail(db, request, showing_id)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
