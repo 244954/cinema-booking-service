@@ -81,40 +81,14 @@ class Showings(db.Model):
         self.age_limit = age_limit
 
 
-class Client_Accounts(db.Model):
-    __tabname__ = 'Client_Accounts'
-    client_id = Column('client_id', Integer, primary_key=True, nullable=True)
-    login = Column('login', Text, nullable=False)
-    password = Column('password', Text, nullable=False)
-    loyalty_points = Column('loyalty_points', Integer, default=0, nullable=False)
-    birth_date = Column('birth_date', Date, nullable=False)
-    email = Column('email', Text, nullable=False)
-    phone_number = Column('phone_number', Text, nullable=True)
-
-    booking = relationship('Bookings', backref='Bookings.client_id',
-                           primaryjoin='Client_Accounts.client_id==Bookings.client_id',
-                           lazy='dynamic')
-
-    def __init__(self, client_id, login, password, loyalty_points, birth_date, email, phone_number):
-        self.client_id = client_id
-        self.login = login
-        self.password = password
-        self.loyalty_points = loyalty_points
-        self.birth_date = birth_date
-        self.email = email
-        self.phone_number = phone_number
-
-
 class Bookings(db.Model):
     __tabname__ = 'Bookings'
     booking_id = Column('booking_id', Integer, primary_key=True, nullable=False)
-    client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=False)
+    client_id = Column('client_id', Integer, nullable=False)
 
-    client = relationship('Client_Accounts', foreign_keys='Bookings.client_id')
-
-    def __init__(self, booking_id, client_id):
-        self.booking_id = booking_id
-        self.client_id = client_id
+    tickets = relationship('Tickets', backref='Tickets.booking_id',
+                           primaryjoin='Bookings.booking_id==Tickets.booking_id',
+                           lazy='dynamic', cascade="all,delete")
 
 
 class Tickets(db.Model):
@@ -129,6 +103,7 @@ class Tickets(db.Model):
     #  client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=True)  # ?
 
     seats = relationship('Seats', foreign_keys='Tickets.seat_id')
+    bookings = relationship(Bookings, foreign_keys='Tickets.booking_id')
     showing = relationship('Tickets_For_Showings', backref='Tickets_For_Showings.ticket_id',
                            primaryjoin='Tickets.ticket_id==Tickets_For_Showings.ticket_id',
                            lazy='dynamic', cascade="all,delete")

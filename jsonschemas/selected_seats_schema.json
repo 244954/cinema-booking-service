@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://cinema-booking-service.herokuapp.com/selected_seats",
+  "title": "Selected Seats Post",
+  "description": "Seats selected by customer to book",
+  "type": "object",
+  "properties": {
+    "seats": {
+      "description": "List of seats",
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "type": "number"
+        },
+        "hall_id": {
+          "type": "number"
+        },
+        "showing_id": {
+          "type": "number"
+        },
+        "selected_seats": {
+          "type": "array",
+          "items": {
+              "type": "number"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": ["client_id", "hall_id", "showing_id", "selected_seats"]
+    }
+  },
+  "required": ["seats"]
+}

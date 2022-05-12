@@ -126,7 +126,7 @@ def showings_detail(showing_id):
 @app.route('/select_seats', methods=['POST'])
 def select_seats():
     if request.method == 'POST':
-        return generate_response('Endpoint not yet implemented', Status_code_not_found)
+        return select_seats_post(db, request)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
