@@ -6,3 +6,4 @@ SQLALCHEMY_DATABASE_URI_PROD = 'postgres://zvbrepbrzinmob' \
                                '-west-1.compute.amazonaws.com:5432/dddakce3tomshd '
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 CORS_HEADERS = 'Content-Type'
+DB_TYPE = 'SQLAlchemy'

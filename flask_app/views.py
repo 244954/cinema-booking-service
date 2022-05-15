@@ -1,9 +1,18 @@
 from flask import request, Response
-from flask_app import app, db
+from flask_app import app, db, DB_TYPE
 from transactions.Booking import get_showing_detail, get_showings, select_seats_post
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
 from utils.Response_codes import *
+from DAOs.DAOFactory import DAOFactory, SQLAlchemyDAOFactory
+
+
+dao_factory: DAOFactory
+
+if DB_TYPE == 'SQLAlchemy':
+    dao_factory = SQLAlchemyDAOFactory(db)
+else:
+    raise NotImplementedError("Can't handle database type: {}".format(DB_TYPE))
 
 
 @app.route('/booking', methods=['POST'])
@@ -17,7 +26,7 @@ def booking():
 @app.route('/offer/halls', methods=['POST'])
 def offer_halls():
     if request.method == 'POST':
-        return halls_post(db, request)
+        return halls_post(dao_factory, request)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

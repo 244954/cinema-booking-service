@@ -104,7 +104,7 @@ def select_seats_post(db: SQLAlchemy, post_request: request) -> Response:
         if not found_seat:
             return generate_response('Selected seat not found', Status_code_bad_request)
         found_ticket = Tickets.query.join(Tickets_For_Showings).filter(Seats.seat_id == found_seat.seat_id, Tickets_For_Showings.showing_id == showing_id).first()
-        if not found_seat:
+        if found_ticket:
             return generate_response('Selected seat already taken', Status_code_bad_request)
         sqlalchemy_seats_found.append(found_seat)
 

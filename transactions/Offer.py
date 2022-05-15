@@ -6,44 +6,33 @@ from utils.Response_codes import *
 import datetime
 import json
 from jsonschema import validate, ValidationError
+from DAOs.DAOFactory import DAOFactory
+from DAOs.HallDataInstance import HallsDataInstanceObject
+from jsonschemas.json_validate import validate_request_json
 
 
-def halls_post(db: SQLAlchemy, post_request: request) -> Response:
+def halls_post(dao_factory: DAOFactory, post_request: request) -> Response:
     try:
-        incoming_json = post_request.get_json()
-    except Exception as ex:
-        return generate_response('Malformed JSON data', Status_code_bad_request)
-
-    with open('jsonschemas/halls_post_schema.json') as validator_file:
-        json_validator = json.load(validator_file)
-        try:
-            validate(incoming_json, schema=json_validator)
-        except ValidationError as err:
-            return generate_response(err.message, Status_code_bad_request)
-
-    hall_id = 'hall_id'
-    cinema_id = 'cinema_id'
-    hall_name = 'hall_name'
-    mandatory_parameters = [hall_id, cinema_id, hall_name]
-    message_list = []
+        incoming_json = validate_request_json(post_request, 'jsonschemas/halls_post_schema.json')
+    except ValidationError as err:
+        return generate_response(err.message, Status_code_bad_request)
 
     halls_list = incoming_json['halls']
+    hall_db_instance = dao_factory.create_halls_object()
+    message_list = []
 
-    for obj in halls_list:
-        parameters = {}
-        for name in mandatory_parameters:
-            if name in obj:
-                parameters[name] = obj[name]
+    for hall in halls_list:
 
-        found_hall = Halls.query.filter_by(hall_id=parameters[hall_id]).first()
+        found_hall = hall_db_instance.get_hall(hall['hall_id'])
         if found_hall:
-            message_list.append({'msg': 'Object already exists', 'id': parameters[hall_id]})
+            message_list.append({'msg': 'Object already exists', 'id': found_hall[HallsDataInstanceObject.hall_id]})
         else:
-            hall = Halls(hall_id=parameters[hall_id], cinema_id=parameters[cinema_id], hall_name=parameters[hall_name])
-            message_list.append({'msg': 'Object created', 'id': parameters[hall_id]})
-            db.session.add(hall)
+            hall_db_instance.insert_hall(hall[HallsDataInstanceObject.hall_id],
+                                         hall[HallsDataInstanceObject.cinema_id],
+                                         hall[HallsDataInstanceObject.hall_name])
+            message_list.append({'msg': 'Object created', 'id': hall[HallsDataInstanceObject.hall_id]})
 
-    db.session.commit()
+    hall_db_instance.commit()
     response = generate_response(message_list, Status_code_created)
     return response
 
