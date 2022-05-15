@@ -24,4 +24,4 @@ channel_cancel_reservation_receive.queue_declare(queue=CHANNEL_CANCEL_RESERVATIO
 # set up subscription on the queue
 channel_cancel_reservation_receive.basic_consume(CHANNEL_CANCEL_RESERVATION_QUEUE,
                                                  cancel_reservation,
-                                                 auto_ack=True)
+                                                 auto_ack=AUTO_ACK)
