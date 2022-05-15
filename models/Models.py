@@ -1,9 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import *
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
 db = SQLAlchemy()
 
 
@@ -27,7 +25,7 @@ class Halls(db.Model):
 
 
 class Seats(db.Model):
-    __tabname__ = 'Seats'
+    __tablename__ = 'Seats'
     seat_id = Column('seat_id', Integer, primary_key=True, nullable=False)
     hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id), nullable=False)
     row_number = Column('row_number', Integer, nullable=False)
@@ -46,7 +44,7 @@ class Seats(db.Model):
 
 
 class Showings(db.Model):
-    __tabname__ = 'Showings'
+    __tablename__ = 'Showings'
     showing_id = Column('showing_id', Integer, primary_key=True, nullable=False)
     showing_date = Column('showing_date', TIMESTAMP(timezone=False), nullable=False)
     hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id), nullable=False)
@@ -82,7 +80,7 @@ class Showings(db.Model):
 
 
 class Bookings(db.Model):
-    __tabname__ = 'Bookings'
+    __tablename__ = 'Bookings'
     booking_id = Column('booking_id', Integer, primary_key=True, nullable=False)
     client_id = Column('client_id', Integer, nullable=False)
 
@@ -92,7 +90,7 @@ class Bookings(db.Model):
 
 
 class Tickets(db.Model):
-    __tabname__ = 'Tickets'
+    __tablename__ = 'Tickets'
     ticket_id = Column('ticket_id', Integer, primary_key=True, nullable=False)
     seat_id = Column('seat_id', Integer, ForeignKey(Seats.seat_id), nullable=False)
     booking_id = Column('booking_id', Integer, ForeignKey(Bookings.booking_id), nullable=False)
@@ -119,7 +117,7 @@ class Tickets(db.Model):
 
 
 class Tickets_For_Showings(db.Model):
-    __tabname__ = 'Tickets_For_Showings'
+    __tablename__ = 'Tickets_For_Showings'
     showing_id = Column('showing_id', Integer, ForeignKey(Showings.showing_id), primary_key=True, nullable=False)
     ticket_id = Column('ticket_id', Integer, ForeignKey(Tickets.ticket_id), primary_key=True, nullable=False)
 
