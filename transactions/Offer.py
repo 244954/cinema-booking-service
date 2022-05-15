@@ -1,14 +1,13 @@
-from models.Models import Tickets, Halls, Seats, Showings
-from flask import request, Response, jsonify, make_response
-from flask_sqlalchemy import SQLAlchemy
+from flask import request, Response
 from utils.Generators import generate_response
 from utils.Response_codes import *
-import datetime
-import json
-from jsonschema import validate, ValidationError
+from jsonschema import ValidationError
 from DAOs.DAOFactory import DAOFactory
-from DAOs.HallDataInstance import HallsDataInstanceObject
+from DAOs.HallDataInstance import HallsDataInstanceObject as HaDIO
+from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
+from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject as ShDIO
 from jsonschemas.json_validate import validate_request_json
+import datetime
 
 
 def halls_post(dao_factory: DAOFactory, post_request: request) -> Response:
@@ -23,120 +22,78 @@ def halls_post(dao_factory: DAOFactory, post_request: request) -> Response:
 
     for hall in halls_list:
 
-        found_hall = hall_db_instance.get_hall(hall['hall_id'])
+        found_hall = hall_db_instance.get_hall(hall[HaDIO.hall_id])
         if found_hall:
-            message_list.append({'msg': 'Object already exists', 'id': found_hall[HallsDataInstanceObject.hall_id]})
+            message_list.append({'msg': 'Object already exists', 'id': found_hall[HaDIO.hall_id]})
         else:
-            hall_db_instance.insert_hall(hall[HallsDataInstanceObject.hall_id],
-                                         hall[HallsDataInstanceObject.cinema_id],
-                                         hall[HallsDataInstanceObject.hall_name])
-            message_list.append({'msg': 'Object created', 'id': hall[HallsDataInstanceObject.hall_id]})
+            hall_db_instance.insert_hall(hall[HaDIO.hall_id],
+                                         hall[HaDIO.cinema_id],
+                                         hall[HaDIO.hall_name])
+            message_list.append({'msg': 'Object created', 'id': hall[HaDIO.hall_id]})
 
     hall_db_instance.commit()
     response = generate_response(message_list, Status_code_created)
     return response
 
 
-def seats_post(db: SQLAlchemy, post_request: request) -> Response:
+def seats_post(dao_factory: DAOFactory, post_request: request) -> Response:
     try:
-        incoming_json = post_request.get_json()
-    except Exception as ex:
-        return generate_response('Malformed JSON data', Status_code_bad_request)
-
-    with open('jsonschemas/seats_post_schema.json') as validator_file:
-        json_validator = json.load(validator_file)
-        try:
-            validate(incoming_json, schema=json_validator)
-        except ValidationError as err:
-            return generate_response(err.message, Status_code_bad_request)
-
-    seat_id = 'seat_id'
-    hall_id = 'hall_id'
-    row_number = 'row_number'
-    seat_number = 'seat_number'
-    mandatory_parameters = [seat_id, hall_id, row_number, seat_number]
-    message_list = []
+        incoming_json = validate_request_json(post_request, 'jsonschemas/seats_post_schema.json')
+    except ValidationError as err:
+        return generate_response(err.message, Status_code_bad_request)
 
     seats_list = incoming_json['seats']
-
-    for obj in seats_list:
-        parameters = {}
-        for name in mandatory_parameters:
-            if name in obj:
-                parameters[name] = obj[name]
-
-        found_seat = Seats.query.filter_by(seat_id=parameters[seat_id]).first()
-        if found_seat:
-            message_list.append({'msg': 'Object already exists', 'id': parameters[seat_id]})
-        else:
-            seat = Seats(seat_id=parameters[seat_id], hall_id=parameters[hall_id], row_number=parameters[row_number], seat_number=parameters[seat_number])
-            message_list.append({'msg': 'Object created', 'id': parameters[seat_id]})
-            db.session.add(seat)
-
-    db.session.commit()
-    response = generate_response(message_list, Status_code_created)
-    return response
-
-
-def showings_post(db: SQLAlchemy, post_request: request) -> Response:
-    try:
-        incoming_json = post_request.get_json()
-    except Exception as ex:
-        return generate_response('Malformed JSON data', Status_code_bad_request)
-
-    with open('jsonschemas/schowings_post_schema.json') as validator_file:
-        json_validator = json.load(validator_file)
-        try:
-            validate(incoming_json, schema=json_validator)
-        except ValidationError as err:
-            return generate_response(err.message, Status_code_bad_request)
-
-    showing_id = 'showing_id'
-    showing_date = 'showing_date'
-    hall_id = 'hall_id'
-    movie_id = 'movie_id'
-    movie_language = 'movie_language'
-    age_limit = 'age_limit'
-
-    subtitles = 'subtitles'
-    dubbing = 'dubbing'
-    lector = 'lector'
-    subtitles_language = 'subtitles_language'
-    lector_language = 'lector_language'
-    dubbing_language = 'dubbing_language'
-
-    mandatory_parameters = [showing_id, showing_date, hall_id, movie_id, movie_language, age_limit]
-    optional_parameters = [subtitles, dubbing, lector, subtitles_language, lector_language, dubbing_language]
+    seats_db_instance = dao_factory.create_seats_object()
     message_list = []
 
-    showings_list = incoming_json['showings']
-
-    for obj in showings_list:
-        parameters = {}
-        for name in mandatory_parameters:
-            if name in obj:
-                parameters[name] = obj[name]
-        for name in optional_parameters:
-            if name in obj:
-                parameters[name] = obj[name]
-            else:
-                parameters[name] = None
-
-        found_showing = Showings.query.filter_by(showing_id=parameters[showing_id]).first()
-        if found_showing:
-            message_list.append({'msg': 'Object already exists', 'id': parameters[showing_id]})
+    for seat in seats_list:
+        found_seat = seats_db_instance.get_seat(seat[SeDIO.seat_id])
+        if found_seat:
+            message_list.append({'msg': 'Object already exists', 'id': found_seat[SeDIO.seat_id]})
         else:
-            showing = Showings(showing_id=parameters[showing_id], showing_date=datetime.datetime.fromtimestamp(parameters[showing_date]),
-                               hall_id=parameters[hall_id], movie_id=parameters[movie_id],
-                               subtitles=parameters[subtitles], dubbing=parameters[dubbing], lector=parameters[lector],
-                               movie_language=parameters[movie_language], subtitles_language=parameters[subtitles_language],
-                               lector_language=parameters[lector_language], dubbing_language=parameters[dubbing_language],
-                               age_limit=parameters[age_limit])
-            message_list.append({'msg': 'Object created', 'id': parameters[showing_id]})
-            db.session.add(showing)
+            seats_db_instance.insert_seat(seat[SeDIO.seat_id],
+                                          seat[SeDIO.hall_id],
+                                          seat[SeDIO.row_number],
+                                          seat[SeDIO.seat_number])
+            message_list.append({'msg': 'Object created', 'id': seat[SeDIO.seat_id]})
 
-    db.session.commit()
+    seats_db_instance.commit()
     response = generate_response(message_list, Status_code_created)
     return response
 
 
+def showings_post(dao_factory: DAOFactory, post_request: request) -> Response:
+    try:
+        incoming_json = validate_request_json(post_request, 'jsonschemas/schowings_post_schema.json')
+    except ValidationError as err:
+        return generate_response(err.message, Status_code_bad_request)
+
+    showings_list = incoming_json['showings']
+    showing_db_instance = dao_factory.create_showings_object()
+    message_list = []
+
+    for showing in showings_list:
+
+        found_showing = showing_db_instance.get_showing(showing[ShDIO.showing_id])
+        if found_showing:
+            message_list.append({'msg': 'Object already exists', 'id': showing[ShDIO.showing_id]})
+        else:
+            showing_db_instance.insert_showing(
+                showing_id=showing[ShDIO.showing_id] if ShDIO.showing_id in showing else None,
+                showing_date=datetime.datetime.fromtimestamp(showing[ShDIO.showing_date] if ShDIO.showing_date in showing else None),
+                hall_id=showing[ShDIO.hall_id] if ShDIO.hall_id in showing else None,
+                movie_id=showing[ShDIO.movie_id] if ShDIO.movie_id in showing else None,
+                subtitles=showing[ShDIO.subtitles] if ShDIO.subtitles in showing else None,
+                dubbing=showing[ShDIO.dubbing] if ShDIO.dubbing in showing else None,
+                lector=showing[ShDIO.lector] if ShDIO.lector in showing else None,
+                movie_language=showing[ShDIO.movie_language] if ShDIO.movie_language in showing else None,
+                subtitles_language=showing[ShDIO.subtitles_language] if ShDIO.subtitles_language in showing else None,
+                lector_language=showing[ShDIO.lector_language] if ShDIO.lector_language in showing else None,
+                dubbing_language=showing[ShDIO.dubbing_language] if ShDIO.dubbing_language in showing else None,
+                age_limit=showing[ShDIO.age_limit] if ShDIO.age_limit in showing else None,
+            )
+            message_list.append({'msg': 'Object created', 'id': showing[ShDIO.showing_id]})
+
+    showing_db_instance.commit()
+    response = generate_response(message_list, Status_code_created)
+    return response
