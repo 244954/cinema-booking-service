@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
-from models.Models import Seats
+from sqlalchemy import func
+
+from models.Models import Seats, Tickets, Tickets_For_Showings
+from utils.AlchemyEncoder import AlchemyEncoder
 
 
 class SeatsDataInstanceObject(ABC):
@@ -11,6 +14,10 @@ class SeatsDataInstanceObject(ABC):
 
     @abstractmethod
     def get_seat(self, seat_id):
+        pass
+
+    @abstractmethod
+    def get_seats_for_showing(self, showing_id, hall_id):
         pass
 
     @abstractmethod
@@ -37,6 +44,24 @@ class SeatsDataInstanceObjectSQLAlchemy(SeatsDataInstanceObject):
             }
         else:
             return None
+
+    def get_seats_for_showing(self, showing_id, hall_id):
+        found_seats = Seats.query.outerjoin(Tickets).outerjoin(Tickets_For_Showings,
+                                                               Tickets_For_Showings.showing_id == showing_id).with_entities(
+            Seats.seat_id.label('seat_id'),
+            Seats.hall_id.label('hall_id'),
+            Seats.row_number.label('row_number'),
+            Seats.seat_number.label('seat_number'),
+            func.count(Tickets_For_Showings.ticket_id).label('tickets')
+        ).group_by(Seats).filter(Seats.hall_id == hall_id).all()
+
+        e = AlchemyEncoder()
+        json_list = []
+        for u in found_seats:
+            data = e.parse_sqlalchemy_object(u)
+            for t in data:
+                json_list.append(t)
+        return json_list
 
     def insert_seat(self, seat_id, hall_id, row_number, seat_number):
         seat = Seats(seat_id=seat_id, hall_id=hall_id, row_number=row_number, seat_number=seat_number)

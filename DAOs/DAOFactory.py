@@ -1,6 +1,8 @@
 from DAOs.HallDataInstance import HallsDataInstanceObject, HallsDataInstanceObjectSQLAlchemy
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject, SeatsDataInstanceObjectSQLAlchemy
 from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject, ShowingsDataInstanceObjectSQLAlchemy
+from DAOs.TicketsDataInstance import TicketsDataInstanceObject, TicketsDataInstanceObjectSQLAlchemy
+from DAOs.BookingsDataInstance import BookingsDataInstanceObject, BookingsDataInstanceObjectSQLAlchemy
 from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
 
@@ -18,6 +20,14 @@ class DAOFactory(ABC):
     def create_showings_object(self) -> ShowingsDataInstanceObject:
         pass
 
+    @abstractmethod
+    def create_tickets_object(self) -> TicketsDataInstanceObject:
+        pass
+
+    @abstractmethod
+    def create_bookings_object(self) -> BookingsDataInstanceObject:
+        pass
+
 
 class SQLAlchemyDAOFactory(DAOFactory):
     def __init__(self, db: SQLAlchemy):
@@ -31,4 +41,10 @@ class SQLAlchemyDAOFactory(DAOFactory):
 
     def create_showings_object(self):
         return ShowingsDataInstanceObjectSQLAlchemy(self.db)
+
+    def create_tickets_object(self):
+        return TicketsDataInstanceObjectSQLAlchemy(self.db)
+
+    def create_bookings_object(self):
+        return BookingsDataInstanceObjectSQLAlchemy(self.db)
 

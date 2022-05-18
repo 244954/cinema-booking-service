@@ -57,7 +57,7 @@ def showings(movie_id):
         subtitles_language = request.args.get('subtitles_language')
         lector_language = request.args.get('lector_language')
         age_limit = request.args.get('age_limit')
-        return get_showings(db, request, from_date, to_date, movie_id, movie_language, dubbing_language,
+        return get_showings(dao_factory, request, from_date, to_date, movie_id, movie_language, dubbing_language,
                             subtitles_language, lector_language, age_limit)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
@@ -66,7 +66,7 @@ def showings(movie_id):
 @app.route('/showings/detail/<showing_id>', methods=['GET'])
 def showings_detail(showing_id):
     if request.method == 'GET':
-        return get_showing_detail(db, request, showing_id)
+        return get_showing_detail(dao_factory, request, showing_id)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -74,7 +74,7 @@ def showings_detail(showing_id):
 @app.route('/select_seats', methods=['POST'])
 def select_seats():
     if request.method == 'POST':
-        return select_seats_post(db, request)
+        return select_seats_post(dao_factory, request)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
