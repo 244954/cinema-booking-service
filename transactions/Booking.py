@@ -1,6 +1,7 @@
 from DAOs.DAOFactory import DAOFactory
 from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject as ShDIO
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
+from DAOs.TicketsDataInstance import NotFoundInDBException
 from jsonschemas.json_validate import validate_request_json
 from flask import request, Response, jsonify, make_response
 from utils.Generators import generate_response
@@ -73,7 +74,26 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request) -> Respons
         seats_found.append(found_seat)
 
     booking_id = bookings_db_instance.insert_booking(client_id, commit=True)
+    seats_found = tickets_db_instance.insert_tickets_no_price(seats_found, booking_id, showing_id, client_id)
+    #  if not paid for in 20 minutes delete tickets
 
-    response_list = {"booking_id": booking_id, "seats": seats_found}
+    response_list = {"booking_id": booking_id, "showing_id": showing_id, "seats": seats_found}
     response = make_response(jsonify(response_list), Status_code_ok)
+    return response
+
+
+def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
+    try:
+        incoming_json = validate_request_json(post_request, 'jsonschemas/tickets_post_schema.json')
+    except ValidationError as err:
+        return generate_response(err.message, Status_code_bad_request)
+
+    new_tickets = incoming_json['tickets']
+    tickets_db_instance = dao_factory.create_tickets_object()
+
+    try:
+        tickets_db_instance.update_tickets(new_tickets)
+    except NotFoundInDBException as err:
+        return generate_response(err.message, Status_code_not_found)
+    response = generate_response('Tickets successfully updated', Status_code_ok)
     return response

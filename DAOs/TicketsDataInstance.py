@@ -1,6 +1,14 @@
 from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+from utils.Others import offered_tickets
 from models.Models import Tickets, Tickets_For_Showings
+
+
+class NotFoundInDBException(Exception):
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.message = message
 
 
 class TicketsDataInstanceObject(ABC):
@@ -14,6 +22,18 @@ class TicketsDataInstanceObject(ABC):
 
     @abstractmethod
     def get_ticket_for_seat_and_showing(self, seat_id, showing_id):
+        pass
+
+    @abstractmethod
+    def insert_tickets_no_price(self, seat_ids: list, booking_id, showing_id, client_id) -> list:
+        pass
+
+    @abstractmethod
+    def update_tickets(self, tickets):
+        pass
+
+    @abstractmethod
+    def commit(self):
         pass
 
 
@@ -36,3 +56,29 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
             }
         else:
             return None
+
+    def insert_tickets_no_price(self, seats_found: list, booking_id, showing_id, client_id):
+        for seat in seats_found:
+            seat_id = seat[TicketsDataInstanceObject.seat_id]
+            ticket = Tickets(seat_id=seat_id, booking_id=booking_id, price=0,
+                             purchase_date=None, booking_date=func.now(), client_id=client_id)
+            self.db.session.add(ticket)
+            self.commit()                   # unfortunate, maybe make some workaround later
+            ticket_id = ticket.ticket_id    # i need that id though
+            ticket_showing = Tickets_For_Showings(showing_id=showing_id, ticket_id=ticket_id)
+            self.db.session.add(ticket_showing)
+            self.commit()
+            seat[TicketsDataInstanceObject.ticket_id] = ticket_id
+        return seats_found  # ticket_ids added
+
+    def update_tickets(self, tickets):
+        for ticket in tickets:
+            selected_ticket = Tickets.query.filter_by(ticket_id=ticket[TicketsDataInstanceObject.ticket_id]).first()
+            if not selected_ticket:
+                raise NotFoundInDBException("Ticket not found")
+            price = offered_tickets[ticket['ticket_type']]
+            selected_ticket.price = price
+        self.commit()
+
+    def commit(self):
+        self.db.session.commit()

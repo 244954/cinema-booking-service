@@ -95,7 +95,7 @@ class Tickets(db.Model):
     seat_id = Column('seat_id', Integer, ForeignKey(Seats.seat_id), nullable=False)
     booking_id = Column('booking_id', Integer, ForeignKey(Bookings.booking_id), nullable=False)
     price = Column('price', Numeric, nullable=False)
-    purchase_date = Column('purchase_date', TIMESTAMP(timezone=True), nullable=False)
+    purchase_date = Column('purchase_date', TIMESTAMP(timezone=True), nullable=True)
     booking_date = Column('booking_date', TIMESTAMP(timezone=False), server_default=func.now(), nullable=False)
     client_id = Column('client_id', Integer, nullable=True)  # ?
     #  client_id = Column('client_id', Integer, ForeignKey(Client_Accounts.client_id), nullable=True)  # ?
@@ -105,15 +105,6 @@ class Tickets(db.Model):
     showing = relationship('Tickets_For_Showings', backref='Tickets_For_Showings.ticket_id',
                            primaryjoin='Tickets.ticket_id==Tickets_For_Showings.ticket_id',
                            lazy='dynamic', cascade="all,delete")
-
-    def __init__(self, tickets_id, seat_id, booking_id, price, purchase_date, booking_date, client_id):
-        self.ticket_id = tickets_id
-        self.seat_id = seat_id
-        self.booking_id = booking_id
-        self.price = price
-        self.purchase_date = purchase_date
-        self.booking_date = booking_date
-        self.client_id = client_id
 
 
 class Tickets_For_Showings(db.Model):

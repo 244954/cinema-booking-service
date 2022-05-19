@@ -24,7 +24,7 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
         booking = Bookings(client_id=client_id)
         self.db.session.add(booking)
         if commit:
-            self.db.session.commit()
+            self.commit()
             return booking.booking_id
 
     def commit(self):

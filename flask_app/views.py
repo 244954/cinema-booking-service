@@ -1,6 +1,6 @@
 from flask import request, Response
 from flask_app import app, db, DB_TYPE
-from transactions.Booking import get_showing_detail, get_showings, select_seats_post
+from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
 from utils.Response_codes import *
@@ -75,6 +75,14 @@ def showings_detail(showing_id):
 def select_seats():
     if request.method == 'POST':
         return select_seats_post(dao_factory, request)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/tickets', methods=['PUT'])
+def create_tickets():
+    if request.method == 'PUT':
+        return tickets_put(dao_factory, request)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

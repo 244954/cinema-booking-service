@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://cinema-booking-service.herokuapp.com/tickets_post",
+  "title": "Tickets Post",
+  "description": "New tickets to insert into database",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "number"
+    },
+    "showing_id": {
+      "type": "number"
+    },
+    "tickets": {
+      "description": "List of tickets",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seat_id": {
+            "type": "number"
+          },
+          "hall_id": {
+            "type": "number"
+          },
+          "ticket_type": {
+            "type": "string"
+          },
+          "ticket_id": {
+            "type": "number"
+          }
+        },
+        "required": ["seat_id", "hall_id", "ticket_type", "ticket_id"]
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    }
+  },
+  "required": ["booking_id", "showing_id", "tickets"]
+}
