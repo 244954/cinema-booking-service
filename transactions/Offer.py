@@ -1,4 +1,5 @@
 from flask import request, Response
+from pika.channel import Channel
 from utils.Generators import generate_response
 from utils.Response_codes import *
 from jsonschema import ValidationError
@@ -8,9 +9,13 @@ from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
 from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject as ShDIO
 from jsonschemas.json_validate import validate_request_json
 import datetime
+import json
 
 
-def halls_post(dao_factory: DAOFactory, post_request: request) -> Response:
+def halls_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
+    json_msg = {"hello": "world"}
+    channel.basic_publish(exchange='', routing_key='test-mati', body=json.dumps(json_msg))
+
     try:
         incoming_json = validate_request_json(post_request, 'jsonschemas/halls_post_schema.json')
     except ValidationError as err:

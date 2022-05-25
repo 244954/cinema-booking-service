@@ -56,6 +56,7 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request) -> Respons
     selected_seats = incoming_json['seats']
     hall_id = selected_seats['hall_id']
     client_id = selected_seats['client_id']
+    email = selected_seats['email']
     showing_id = selected_seats['showing_id']
     selected_seats = selected_seats['selected_seats']
     seats_db_instance = dao_factory.create_seats_object()
@@ -73,7 +74,7 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request) -> Respons
         found_seat["available_tickets"] = offered_tickets
         seats_found.append(found_seat)
 
-    booking_id = bookings_db_instance.insert_booking(client_id, commit=True)
+    booking_id = bookings_db_instance.insert_booking(client_id, email, None, commit=True)
     seats_found = tickets_db_instance.insert_tickets_no_price(seats_found, booking_id, showing_id, client_id)
     #  if not paid for in 20 minutes delete tickets
 

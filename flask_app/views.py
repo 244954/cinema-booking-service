@@ -1,11 +1,10 @@
 from flask import request, Response
-from flask_app import app, db, DB_TYPE
+from flask_app import app, db, DB_TYPE, channel_receiver
 from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
 from utils.Response_codes import *
 from DAOs.DAOFactory import DAOFactory, SQLAlchemyDAOFactory
-
 
 dao_factory: DAOFactory
 
@@ -26,7 +25,7 @@ def booking():
 @app.route('/offer/halls', methods=['POST'])
 def offer_halls():
     if request.method == 'POST':
-        return halls_post(dao_factory, request)
+        return halls_post(dao_factory, request, channel_receiver)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

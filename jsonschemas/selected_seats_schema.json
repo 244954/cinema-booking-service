@@ -12,6 +12,9 @@
         "client_id": {
           "type": "number"
         },
+        "email": {
+          "type": "string"
+        },
         "hall_id": {
           "type": "number"
         },
@@ -27,7 +30,7 @@
           "uniqueItems": true
         }
       },
-      "required": ["client_id", "hall_id", "showing_id", "selected_seats"]
+      "required": ["client_id", "email", "hall_id", "showing_id", "selected_seats"]
     }
   },
   "required": ["seats"]

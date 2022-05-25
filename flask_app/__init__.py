@@ -1,6 +1,7 @@
 from flask import Flask
 from models.Models import db
 from flask_app.config import *
+from mqrabbit import *
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = SECRET_KEY

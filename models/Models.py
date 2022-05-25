@@ -83,6 +83,8 @@ class Bookings(db.Model):
     __tablename__ = 'Bookings'
     booking_id = Column('booking_id', Integer, primary_key=True, nullable=False)
     client_id = Column('client_id', Integer, nullable=False)
+    email = Column('email', Text, nullable=False)
+    payment_id = Column('payment_id', Integer, nullable=True)
 
     tickets = relationship('Tickets', backref='Tickets.booking_id',
                            primaryjoin='Bookings.booking_id==Tickets.booking_id',

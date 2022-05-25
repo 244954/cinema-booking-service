@@ -8,7 +8,7 @@ class BookingsDataInstanceObject(ABC):
     client_id = 'client_id'
 
     @abstractmethod
-    def insert_booking(self, client_id, commit: bool) -> int:
+    def insert_booking(self, client_id, email, payment_id, commit: bool) -> int:
         pass
 
     @abstractmethod
@@ -20,8 +20,8 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
     def __init__(self, db: SQLAlchemy):
         self.db = db
 
-    def insert_booking(self, client_id, commit=False):
-        booking = Bookings(client_id=client_id)
+    def insert_booking(self, client_id, email, payment_id, commit=False):
+        booking = Bookings(client_id=client_id, email=email, payment_id=payment_id)
         self.db.session.add(booking)
         if commit:
             self.commit()

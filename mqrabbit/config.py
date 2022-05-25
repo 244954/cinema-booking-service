@@ -1,4 +1,10 @@
 CLOUDAMQP_URL = 'amqps://wkopublf:3ry2ohNtiaf2nYC-QTzFYO3MQioPMXja@bonobo.rmq.cloudamqp.com/wkopublf'
 SOCKET_TIMEOUT = 5
 CHANNEL_CANCEL_RESERVATION_QUEUE = 'cancel-reservation'
+CHANNEL_CONFIRM_RESERVATION_QUEUE = 'confirm-reservation'
+CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE = 'cancel-reservation-notification'
+CHANNEL_REFUND_QUEUE = 'refund'
+CHANNEL_NEW_SHOWING_QUEUE = 'new-showing'
+CHANNEL_TICKET_NOTIFICATION_QUEUE = 'ticket-notification'
+CHANNEL_TEST_QUEUE = 'test-mati'
 AUTO_ACK = True
