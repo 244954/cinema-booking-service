@@ -1,8 +1,18 @@
+import json
+from decimal import Decimal
+
 offered_tickets = {
     "Normalny": 26.0,
     "Ulgowy": 22.0,
     "Studencki": 23.50
 }
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def seat_taken(ticket_id):

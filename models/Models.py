@@ -27,7 +27,7 @@ class Halls(db.Model):
 class Seats(db.Model):
     __tablename__ = 'Seats'
     seat_id = Column('seat_id', Integer, primary_key=True, nullable=False)
-    hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id), nullable=False)
+    hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id, ondelete='CASCADE'), nullable=False)
     row_number = Column('row_number', Integer, nullable=False)
     seat_number = Column('seat_number', Integer, nullable=False)
 
@@ -47,7 +47,7 @@ class Showings(db.Model):
     __tablename__ = 'Showings'
     showing_id = Column('showing_id', Integer, primary_key=True, nullable=False)
     showing_date = Column('showing_date', TIMESTAMP(timezone=False), nullable=False)
-    hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id), nullable=False)
+    hall_id = Column('hall_id', Integer, ForeignKey(Halls.hall_id, ondelete='CASCADE'), nullable=False)
     movie_id = Column('movie_id', Integer, nullable=False)
     subtitles = Column('subtitles', Boolean)
     dubbing = Column('dubbing', Boolean)
@@ -94,8 +94,8 @@ class Bookings(db.Model):
 class Tickets(db.Model):
     __tablename__ = 'Tickets'
     ticket_id = Column('ticket_id', Integer, primary_key=True, nullable=False)
-    seat_id = Column('seat_id', Integer, ForeignKey(Seats.seat_id), nullable=False)
-    booking_id = Column('booking_id', Integer, ForeignKey(Bookings.booking_id), nullable=False)
+    seat_id = Column('seat_id', Integer, ForeignKey(Seats.seat_id, ondelete='CASCADE'), nullable=False)
+    booking_id = Column('booking_id', Integer, ForeignKey(Bookings.booking_id, ondelete='CASCADE'), nullable=False)
     price = Column('price', Numeric, nullable=False)
     purchase_date = Column('purchase_date', TIMESTAMP(timezone=True), nullable=True)
     booking_date = Column('booking_date', TIMESTAMP(timezone=False), server_default=func.now(), nullable=False)
@@ -111,8 +111,8 @@ class Tickets(db.Model):
 
 class Tickets_For_Showings(db.Model):
     __tablename__ = 'Tickets_For_Showings'
-    showing_id = Column('showing_id', Integer, ForeignKey(Showings.showing_id), primary_key=True, nullable=False)
-    ticket_id = Column('ticket_id', Integer, ForeignKey(Tickets.ticket_id), primary_key=True, nullable=False)
+    showing_id = Column('showing_id', Integer, ForeignKey(Showings.showing_id, ondelete='CASCADE'), primary_key=True, nullable=False)
+    ticket_id = Column('ticket_id', Integer, ForeignKey(Tickets.ticket_id, ondelete='CASCADE'), primary_key=True, nullable=False)
 
     showing = relationship('Showings', foreign_keys='Tickets_For_Showings.showing_id')
     ticket = relationship('Tickets', foreign_keys='Tickets_For_Showings.ticket_id')

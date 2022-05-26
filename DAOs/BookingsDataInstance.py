@@ -40,12 +40,15 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
 
     def get_booking(self, booking_id):
         booking = Bookings.query.filter_by(booking_id=booking_id).first()
-        return {
-            BookingsDataInstanceObject.booking_id: booking.booking_id,
-            BookingsDataInstanceObject.client_id: booking.client_id,
-            BookingsDataInstanceObject.email: booking.email,
-            BookingsDataInstanceObject.payment_id: booking.payment_id
-        }
+        if booking:
+            return {
+                BookingsDataInstanceObject.booking_id: booking.booking_id,
+                BookingsDataInstanceObject.client_id: booking.client_id,
+                BookingsDataInstanceObject.email: booking.email,
+                BookingsDataInstanceObject.payment_id: booking.payment_id
+            }
+        else:
+            return None
 
     def get_bookings(self, email):
         bookings = Bookings.query.filter_by(email=email).all()

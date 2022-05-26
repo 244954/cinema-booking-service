@@ -5,6 +5,7 @@ from utils.Others import offered_tickets
 from models.Models import Tickets, Tickets_For_Showings, Seats, Halls
 from DAOs.HallDataInstance import HallsDataInstanceObject as HaDIO
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
+from utils.AlchemyEncoder import AlchemyEncoder
 
 
 class NotFoundInDBException(Exception):
@@ -64,7 +65,13 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
             return None
 
     def get_tickets_for_booking(self, booking_id):
-        tickets = Tickets.query.join(Seats).join(Halls).filter_by(booking_id=booking_id).all()
+        tickets = Tickets.query.filter_by(booking_id=booking_id).join(Seats).join(Halls).with_entities(
+            Seats.seat_number.label('seat_number'),
+            Seats.row_number.label('row_number'),
+            Halls.hall_name.label('hall_name'),
+            Tickets.price.label('price')
+        ).all()
+
         tickets_array = []
         for ticket in tickets:
             tickets_array.append(
