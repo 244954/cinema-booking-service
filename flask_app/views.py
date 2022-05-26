@@ -1,6 +1,6 @@
 from flask import request, Response
 from flask_app import app, db, DB_TYPE, channel_publisher
-from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put, test_post
+from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put, test_post, get_bookings_from_email, delete_booking_by_id
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
 from utils.Response_codes import *
@@ -25,7 +25,7 @@ def booking():
 @app.route('/offer/halls', methods=['POST'])
 def offer_halls():
     if request.method == 'POST':
-        return halls_post(dao_factory, request, channel_publisher)
+        return halls_post(dao_factory, request)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -89,7 +89,15 @@ def create_tickets():
 @app.route('/bookings/<booking_id>', methods=['DELETE'])
 def delete_booking(booking_id):
     if request.method == 'DELETE':
-        return booking_delete(dao_factory, request, channel_publisher, booking_id)
+        return delete_booking_by_id(dao_factory, request, channel_publisher, booking_id)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/bookings/<email>', methods=['GET'])
+def get_bookings(email):
+    if request.method == 'GET':
+        return get_bookings_from_email(dao_factory, email)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

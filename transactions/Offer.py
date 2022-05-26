@@ -12,7 +12,7 @@ import datetime
 import json
 
 
-def halls_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
+def halls_post(dao_factory: DAOFactory, post_request: request) -> Response:
     try:
         incoming_json = validate_request_json(post_request, 'jsonschemas/halls_post_schema.json')
     except ValidationError as err:

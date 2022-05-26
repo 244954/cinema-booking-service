@@ -95,7 +95,8 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request, channel: C
         "tickets": tickets,
         "movie_name": None  # get it from somewhere
     }
-    channel.basic_publish(exchange='', routing_key=CHANNEL_TICKET_NOTIFICATION_QUEUE, body=json.dumps(json_to_send))
+    #  channel.basic_publish(exchange='', routing_key=CHANNEL_TICKET_NOTIFICATION_QUEUE, body=json.dumps(json_to_send))
+    channel.basic_publish(exchange='', routing_key=CHANNEL_TEST_QUEUE, body=json.dumps(json_to_send))
 
     response_list = {"booking_id": booking_id, "showing_id": showing_id, "seats": seats_found}
     response = make_response(jsonify(response_list), Status_code_ok)
@@ -141,8 +142,8 @@ def cancel_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel)
     bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
     bookings_db_instance.commit()
 
-    channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE,
-                          body=json.dumps(json_to_send))
+    #  channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, body=json.dumps(json_to_send))
+    channel.basic_publish(exchange='', routing_key=CHANNEL_TEST_QUEUE, body=json.dumps(json_to_send))
 
 
 def confirm_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel):
@@ -153,9 +154,12 @@ def confirm_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel
         return
 
     booking_id = incoming_json['booking_id']
+    payment_date = incoming_json['payment_date']
     bookings_db_instance = dao_factory.create_bookings_object()
     tickets_db_instance = dao_factory.create_tickets_object()
 
+    bookings_db_instance.confirm_payment(booking_id, payment_date)
+    bookings_db_instance.commit()
     booking = bookings_db_instance.get_booking(booking_id)
     tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
     json_to_send = {
@@ -164,14 +168,11 @@ def confirm_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel
         "movie_name": None  # get it from somewhere
     }
 
-    bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
-    bookings_db_instance.commit()
-
-    channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE,
-                          body=json.dumps(json_to_send))
+    #  channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, body=json.dumps(json_to_send))
+    channel.basic_publish(exchange='', routing_key=CHANNEL_TEST_QUEUE, body=json.dumps(json_to_send))
 
 
-def delete_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel, booking_id):
+def delete_booking_by_id(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel, booking_id):
     bookings_db_instance = dao_factory.create_bookings_object()
 
     booking = bookings_db_instance.get_booking(booking_id)
@@ -181,5 +182,14 @@ def delete_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel,
     json_to_send = {
         "payment_id": booking[BoDIO.payment_id]
     }
-    channel.basic_publish(exchange='', routing_key=CHANNEL_REFUND_QUEUE,
-                          body=json.dumps(json_to_send))
+    #  channel.basic_publish(exchange='', routing_key=CHANNEL_REFUND_QUEUE, body=json.dumps(json_to_send))
+    channel.basic_publish(exchange='', routing_key=CHANNEL_TEST_QUEUE, body=json.dumps(json_to_send))
+
+
+def get_bookings_from_email(dao_factory: DAOFactory, email):
+    bookings_db_instance = dao_factory.create_bookings_object()
+    bookings = bookings_db_instance.get_bookings(email)
+
+    response_list = {"bookings": bookings}
+    response = make_response(jsonify(response_list), Status_code_ok)
+    return response

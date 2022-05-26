@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
-from models.Models import Bookings
+from models.Models import Bookings, Tickets
 
 
 class BookingsDataInstanceObject(ABC):
@@ -14,6 +14,10 @@ class BookingsDataInstanceObject(ABC):
         pass
 
     @abstractmethod
+    def get_bookings(self, email):
+        pass
+
+    @abstractmethod
     def insert_booking(self, client_id, email, payment_id, commit: bool) -> int:
         pass
 
@@ -22,7 +26,7 @@ class BookingsDataInstanceObject(ABC):
         pass
 
     @abstractmethod
-    def confirm_payment(self, booking_id):
+    def confirm_payment(self, booking_id, payment_date):
         pass
 
     @abstractmethod
@@ -35,13 +39,28 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
         self.db = db
 
     def get_booking(self, booking_id):
-        booking = Bookings(booking_id=booking_id).first()
+        booking = Bookings.query.filter_by(booking_id=booking_id).first()
         return {
             BookingsDataInstanceObject.booking_id: booking.booking_id,
             BookingsDataInstanceObject.client_id: booking.client_id,
             BookingsDataInstanceObject.email: booking.email,
             BookingsDataInstanceObject.payment_id: booking.payment_id
         }
+
+    def get_bookings(self, email):
+        bookings = Bookings.query.filter_by(email=email).all()
+        records = []
+        for booking in bookings:
+            #  Tickets.query.filter_by(booking_id=booking.booking_id).all()
+            records.append(
+                {
+                    "booking_id": booking.booking_id
+                }
+            )
+        if records:
+            return records
+        else:
+            return None
 
     def insert_booking(self, client_id, email, payment_id, commit=False):
         booking = Bookings(client_id=client_id, email=email, payment_id=payment_id)
@@ -53,8 +72,10 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
     def delete_booking(self, booking_id):
         Bookings.query.filter_by(booking_id=booking_id).delete()
 
-    def confirm_payment(self, booking_id):
-        Tick
+    def confirm_payment(self, booking_id, payment_date):
+        tickets = Tickets.query.filter_by(booking_id=booking_id).all()
+        for ticket in tickets:
+            ticket.purchase_date = payment_date
 
     def commit(self):
         self.db.session.commit()
