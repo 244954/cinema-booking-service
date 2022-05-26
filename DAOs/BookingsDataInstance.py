@@ -22,6 +22,10 @@ class BookingsDataInstanceObject(ABC):
         pass
 
     @abstractmethod
+    def confirm_payment(self, booking_id):
+        pass
+
+    @abstractmethod
     def commit(self):
         pass
 
@@ -48,6 +52,9 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
 
     def delete_booking(self, booking_id):
         Bookings.query.filter_by(booking_id=booking_id).delete()
+
+    def confirm_payment(self, booking_id):
+        Tick
 
     def commit(self):
         self.db.session.commit()

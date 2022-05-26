@@ -7,7 +7,7 @@ from DAOs.DAOFactory import DAOFactory
 from DAOs.HallDataInstance import HallsDataInstanceObject as HaDIO
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
 from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject as ShDIO
-from jsonschemas.json_validate import validate_request_json
+from jsonschemas.json_validate import validate_request_json, validate_bytes_json
 import datetime
 import json
 
@@ -64,9 +64,12 @@ def seats_post(dao_factory: DAOFactory, post_request: request) -> Response:
     return response
 
 
-def showings_post(dao_factory: DAOFactory, post_request: request) -> Response:
+def showings_post(dao_factory: DAOFactory, post_request: request, byte_json=None) -> Response:
     try:
-        incoming_json = validate_request_json(post_request, 'jsonschemas/schowings_post_schema.json')
+        if byte_json:
+            incoming_json = validate_bytes_json(byte_json, 'jsonschemas/schowings_post_schema.json')
+        else:
+            incoming_json = validate_request_json(post_request, 'jsonschemas/schowings_post_schema.json')
     except ValidationError as err:
         return generate_response(err.message, Status_code_bad_request)
 
@@ -82,7 +85,8 @@ def showings_post(dao_factory: DAOFactory, post_request: request) -> Response:
         else:
             showing_db_instance.insert_showing(
                 showing_id=showing[ShDIO.showing_id] if ShDIO.showing_id in showing else None,
-                showing_date=datetime.datetime.fromtimestamp(showing[ShDIO.showing_date] if ShDIO.showing_date in showing else None),
+                showing_date=datetime.datetime.fromtimestamp(
+                    showing[ShDIO.showing_date] if ShDIO.showing_date in showing else None),
                 hall_id=showing[ShDIO.hall_id] if ShDIO.hall_id in showing else None,
                 movie_id=showing[ShDIO.movie_id] if ShDIO.movie_id in showing else None,
                 subtitles=showing[ShDIO.subtitles] if ShDIO.subtitles in showing else None,

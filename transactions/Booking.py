@@ -1,5 +1,5 @@
 from pika.channel import Channel
-from mqrabbit.config import CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, CHANNEL_TEST_QUEUE, CHANNEL_TICKET_NOTIFICATION_QUEUE
+from mqrabbit.config import CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, CHANNEL_TEST_QUEUE, CHANNEL_TICKET_NOTIFICATION_QUEUE, CHANNEL_REFUND_QUEUE
 from DAOs.DAOFactory import DAOFactory
 from DAOs.ShowingsDataInstance import ShowingsDataInstanceObject as ShDIO
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
@@ -142,4 +142,44 @@ def cancel_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel)
     bookings_db_instance.commit()
 
     channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE,
+                          body=json.dumps(json_to_send))
+
+
+def confirm_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel):
+    try:
+        incoming_json = validate_bytes_json(bytes, 'jsonschemas/confirm_booking_schema.json')
+    except ValidationError as err:
+        print(err.message)
+        return
+
+    booking_id = incoming_json['booking_id']
+    bookings_db_instance = dao_factory.create_bookings_object()
+    tickets_db_instance = dao_factory.create_tickets_object()
+
+    booking = bookings_db_instance.get_booking(booking_id)
+    tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
+    json_to_send = {
+        "email": booking[BoDIO.booking_id],
+        "tickets": tickets,
+        "movie_name": None  # get it from somewhere
+    }
+
+    bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
+    bookings_db_instance.commit()
+
+    channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE,
+                          body=json.dumps(json_to_send))
+
+
+def delete_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel, booking_id):
+    bookings_db_instance = dao_factory.create_bookings_object()
+
+    booking = bookings_db_instance.get_booking(booking_id)
+    bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
+    bookings_db_instance.commit()
+
+    json_to_send = {
+        "payment_id": booking[BoDIO.payment_id]
+    }
+    channel.basic_publish(exchange='', routing_key=CHANNEL_REFUND_QUEUE,
                           body=json.dumps(json_to_send))

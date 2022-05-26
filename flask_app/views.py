@@ -86,6 +86,14 @@ def create_tickets():
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
 
+@app.route('/bookings/<booking_id>', methods=['DELETE'])
+def delete_booking(booking_id):
+    if request.method == 'DELETE':
+        return booking_delete(dao_factory, request, channel_publisher, booking_id)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
 @app.route('/payment_completed/<successful>', methods=['PUT'])
 def payment_completed(successful):
     if request.method == 'PUT':

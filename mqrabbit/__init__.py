@@ -45,10 +45,6 @@ channel_publisher.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QU
 channel_publisher.queue_declare(queue=CHANNEL_REFUND_QUEUE, durable=True)
 channel_publisher.queue_declare(queue=CHANNEL_TICKET_NOTIFICATION_QUEUE, durable=True)
 channel_publisher.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
-channel_publisher.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_QUEUE, durable=True)
-channel_publisher.queue_declare(queue=CHANNEL_NEW_SHOWING_QUEUE, durable=True)
-channel_publisher.queue_declare(queue=CHANNEL_CONFIRM_RESERVATION_QUEUE, durable=True)
-channel_publisher.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
 #  how to publish message to MQRabbit customer
 #  channel.basic_publish(exchange='', routing_key='cancel-reservation', body='User information')
 from mqrabbit.callbacks import *

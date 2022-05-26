@@ -24,6 +24,8 @@ def validate_bytes_json(received_bytes, jsonschema_path):
     except Exception:
         raise ValidationError("Malformed JSON data")
 
+    return incoming_json  # jsonschema not yet implemented
+    # TODO: create jsonschemas
     with open(jsonschema_path) as validator_file:
         json_validator = json.load(validator_file)
         try:
