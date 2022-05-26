@@ -13,9 +13,6 @@ import json
 
 
 def halls_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
-    json_msg = {"hello": "world"}
-    channel.basic_publish(exchange='', routing_key='test-mati', body=json.dumps(json_msg))
-
     try:
         incoming_json = validate_request_json(post_request, 'jsonschemas/halls_post_schema.json')
     except ValidationError as err:

@@ -16,3 +16,18 @@ def validate_request_json(received_request: request, jsonschema_path):
             return incoming_json
         except ValidationError as err:
             raise ValidationError(err.message)
+
+
+def validate_bytes_json(received_bytes, jsonschema_path):
+    try:
+        incoming_json = json.loads(received_bytes)
+    except Exception:
+        raise ValidationError("Malformed JSON data")
+
+    with open(jsonschema_path) as validator_file:
+        json_validator = json.load(validator_file)
+        try:
+            validate(incoming_json, schema=json_validator)
+            return incoming_json
+        except ValidationError as err:
+            raise ValidationError(err.message)

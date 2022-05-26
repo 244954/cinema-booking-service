@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from utils.Others import offered_tickets
-from models.Models import Tickets, Tickets_For_Showings
+from models.Models import Tickets, Tickets_For_Showings, Seats, Halls
+from DAOs.HallDataInstance import HallsDataInstanceObject as HaDIO
+from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
 
 
 class NotFoundInDBException(Exception):
@@ -22,6 +24,10 @@ class TicketsDataInstanceObject(ABC):
 
     @abstractmethod
     def get_ticket_for_seat_and_showing(self, seat_id, showing_id):
+        pass
+
+    @abstractmethod
+    def get_tickets_for_booking(self, booking_id):
         pass
 
     @abstractmethod
@@ -54,6 +60,23 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
                 TicketsDataInstanceObject.booking_date: found_ticket.booking_date,
                 TicketsDataInstanceObject.client_id: found_ticket.client_id
             }
+        else:
+            return None
+
+    def get_tickets_for_booking(self, booking_id):
+        tickets = Tickets.query.join(Seats).join(Halls).filter_by(booking_id=booking_id).all()
+        tickets_array = []
+        for ticket in tickets:
+            tickets_array.append(
+                {
+                    SeDIO.seat_number: ticket.seat_number,
+                    SeDIO.row_number: ticket.row_number,
+                    HaDIO.hall_name: ticket.hall_name,
+                    TicketsDataInstanceObject.price: ticket.price
+                }
+            )
+        if tickets_array:
+            return tickets_array
         else:
             return None
 

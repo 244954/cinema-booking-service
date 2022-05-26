@@ -2,7 +2,6 @@ import logging
 import os
 import pika
 from mqrabbit.config import *
-from mqrabbit.callbacks import *
 
 
 def on_channel_open(channel):
@@ -41,14 +40,15 @@ params.socket_timeout = SOCKET_TIMEOUT
 connection = pika.SelectConnection(parameters=params,
                                    on_open_callback=on_open)
 connection2 = pika.BlockingConnection(params)  # Connect to CloudAMQP
-channel_receiver = connection2.channel()
-channel_receiver.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_REFUND_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_TICKET_NOTIFICATION_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_NEW_SHOWING_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_CONFIRM_RESERVATION_QUEUE, durable=True)
-channel_receiver.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
+channel_publisher = connection2.channel()
+channel_publisher.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_REFUND_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_TICKET_NOTIFICATION_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_NEW_SHOWING_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_CONFIRM_RESERVATION_QUEUE, durable=True)
+channel_publisher.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
 #  how to publish message to MQRabbit customer
 #  channel.basic_publish(exchange='', routing_key='cancel-reservation', body='User information')
+from mqrabbit.callbacks import *

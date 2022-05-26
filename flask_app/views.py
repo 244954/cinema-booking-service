@@ -1,6 +1,6 @@
 from flask import request, Response
-from flask_app import app, db, DB_TYPE, channel_receiver
-from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put
+from flask_app import app, db, DB_TYPE, channel_publisher
+from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put, test_post
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
 from utils.Response_codes import *
@@ -14,10 +14,10 @@ else:
     raise NotImplementedError("Can't handle database type: {}".format(DB_TYPE))
 
 
-@app.route('/booking', methods=['POST'])
+@app.route('/test', methods=['POST'])
 def booking():
     if request.method == 'POST':
-        return Response(status=Status_code_ok)
+        return test_post(dao_factory, request, channel_publisher)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -25,7 +25,7 @@ def booking():
 @app.route('/offer/halls', methods=['POST'])
 def offer_halls():
     if request.method == 'POST':
-        return halls_post(dao_factory, request, channel_receiver)
+        return halls_post(dao_factory, request, channel_publisher)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -73,7 +73,7 @@ def showings_detail(showing_id):
 @app.route('/select_seats', methods=['POST'])
 def select_seats():
     if request.method == 'POST':
-        return select_seats_post(dao_factory, request)
+        return select_seats_post(dao_factory, request, channel_publisher)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

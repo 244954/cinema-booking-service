@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://cinema-booking-service.herokuapp.com/new_booking",
+  "title": "New booking",
+  "description": "Send new booking data",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string"
+    },
+    "tickets": {
+      "description": "List of tickets",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "row_number": {
+            "type": "number"
+          },
+          "seat_number": {
+            "type": "number"
+          },
+          "hall_name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          }
+        },
+        "required": ["row_number", "seat_number", "hall_name", "price"]
+      },
+      "uniqueItems": true
+    },
+    "movie_name": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": ["email", "tickets", "movie_name"]
+}
