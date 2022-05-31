@@ -17,16 +17,23 @@ else:
 
 
 def cancel_reservation(ch, method, properties, body):
+    print('cancel_reservation')
+    print(body)
     cancel_booking(dao_factory, body, channel_publisher)
 
 
 def new_showing(ch, method, properties, body):
+    print('new_showing')
+    print(body)
     showings_post(dao_factory, post_request=None, byte_json=body)
 
 
 def confirm_reservation(ch, method, properties, body):
+    print('confirm_reservation')
+    print(body)
     confirm_booking(dao_factory, body, channel_publisher)
 
 
 def test(ch, method, properties, body):
+    print('test')
     print(json.loads(body))

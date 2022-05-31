@@ -13,6 +13,7 @@ from utils.Response_codes import *
 from utils.Others import offered_tickets, JSONEncoder
 from jsonschema import ValidationError
 import json
+import requests as rq
 
 
 def test_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
@@ -98,6 +99,22 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request, channel: C
     }
     channel.basic_publish(exchange='', routing_key=CHANNEL_TICKET_NOTIFICATION_QUEUE, body=json.dumps(json_to_send, cls=JSONEncoder))
 
+    r = rq.post('https://cinema-payment-service.herokuapp.com/payment', json={
+        "customerIp": "87.99.45.184",
+        "description": "Description",   # pamiętać że wszystko ma być stringiem
+        "refundExpirationDate": "2022-06-03T08:53:00.415494",  # zwykła data ze strefą czasową
+        "products": [{
+            "name": "",
+            "unitPrice": "2300",  # w groszach
+            "quantity": "1"
+        }, {
+            "name": "Ticket 2",
+            "unitPrice": "2500",
+            "quantity": "1"
+        }]
+    })  # przełożyć to do tickets_put!!!!!!! W tym momencie wszystkie ceny to 0
+    print(r.json())
+
     response_list = {"booking_id": booking_id, "showing_id": showing_id, "seats": seats_found}
     response = make_response(jsonify(response_list), Status_code_ok)
     return response
@@ -181,13 +198,13 @@ def delete_booking_by_id(dao_factory: DAOFactory, json_bytes: bytes, channel: Ch
         return generate_response('Booking with id {} not found'.format(booking_id), Status_code_not_found)
     bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
 
-    json_to_send = json.dumps(
-        {
-            "payment_id": booking[BoDIO.payment_id]
-        },
-        cls=JSONEncoder
-    )
-    channel.basic_publish(exchange='', routing_key=CHANNEL_REFUND_QUEUE, body=json_to_send)
+    payment_id: str = booking[BoDIO.payment_id]
+    if payment_id:
+        bytes_to_send = payment_id.encode()
+    else:
+        bytes_to_send = 'dummy_id'.encode()
+
+    channel.basic_publish(exchange='', routing_key=CHANNEL_REFUND_QUEUE, body=bytes_to_send)
     bookings_db_instance.commit()
     response = make_response("Booking deleted", Status_code_ok)
     return response
