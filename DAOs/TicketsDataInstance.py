@@ -108,7 +108,9 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
                 raise NotFoundInDBException("Ticket not found")
             price = offered_tickets[ticket['ticket_type']]
             selected_ticket.price = price
+            ticket[TicketsDataInstanceObject.price] = price
         self.commit()
+        return tickets
 
     def commit(self):
         self.db.session.commit()

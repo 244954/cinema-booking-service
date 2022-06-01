@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://cinema-booking-service.herokuapp.com/schowings_post_offer",
+  "title": "Showing Post",
+  "description": "New showing to insert into database",
+  "type": "object",
+  "properties": {
+      "showing_id": {
+        "type": "number"
+      },
+      "showing_date": {
+        "type": "number"
+      },
+      "hall_id": {
+        "type": "number"
+      },
+      "movie_id": {
+        "type": "number"
+      },
+      "subtitles": {
+        "type": ["boolean", "null"]
+      },
+      "dubbing": {
+        "type": ["boolean", "null"]
+      },
+      "lector": {
+        "type": ["boolean", "null"]
+      },
+      "movie_language": {
+        "type": "string"
+      },
+      "subtitles_language": {
+        "type": ["string", "null"]
+      },
+      "lector_language": {
+        "type": ["string", "null"]
+      },
+      "dubbing_language": {
+        "type": ["string", "null"]
+      },
+      "age_limit": {
+        "type": "number"
+      }
+    },
+  "required": ["showing_id", "showing_date", "hall_id", "movie_id", "movie_language", "age_limit"]
+}

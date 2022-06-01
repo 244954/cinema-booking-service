@@ -16,24 +16,26 @@ else:
     raise NotImplementedError("Can't handle database type: {}".format(DB_TYPE))
 
 
-def cancel_reservation(ch, method, properties, body):
+def cancel_reservation(ch, method, properties, body: bytes):
     print('cancel_reservation')
     print(body)
-    cancel_booking(dao_factory, body, channel_publisher)
+    payment_id = body.decode("utf-8")
+    cancel_booking(dao_factory, payment_id, channel_publisher)
 
 
-def new_showing(ch, method, properties, body):
+def new_showing(ch, method, properties, body: bytes):
     print('new_showing')
     print(body)
     showings_post(dao_factory, post_request=None, byte_json=body)
 
 
-def confirm_reservation(ch, method, properties, body):
+def confirm_reservation(ch, method, properties, body: bytes):
     print('confirm_reservation')
     print(body)
-    confirm_booking(dao_factory, body, channel_publisher)
+    payment_id = body.decode("utf-8")
+    confirm_booking(dao_factory, payment_id, channel_publisher)
 
 
-def test(ch, method, properties, body):
+def test(ch, method, properties, body: bytes):
     print('test')
     print(json.loads(body))

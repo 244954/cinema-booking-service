@@ -14,6 +14,7 @@ from utils.Others import offered_tickets, JSONEncoder
 from jsonschema import ValidationError
 import json
 import requests as rq
+import datetime
 
 
 def test_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
@@ -99,22 +100,6 @@ def select_seats_post(dao_factory: DAOFactory, post_request: request, channel: C
     }
     channel.basic_publish(exchange='', routing_key=CHANNEL_TICKET_NOTIFICATION_QUEUE, body=json.dumps(json_to_send, cls=JSONEncoder))
 
-    r = rq.post('https://cinema-payment-service.herokuapp.com/payment', json={
-        "customerIp": "87.99.45.184",
-        "description": "Description",   # pamiętać że wszystko ma być stringiem
-        "refundExpirationDate": "2022-06-03T08:53:00.415494",  # zwykła data ze strefą czasową
-        "products": [{
-            "name": "",
-            "unitPrice": "2300",  # w groszach
-            "quantity": "1"
-        }, {
-            "name": "Ticket 2",
-            "unitPrice": "2500",
-            "quantity": "1"
-        }]
-    })  # przełożyć to do tickets_put!!!!!!! W tym momencie wszystkie ceny to 0
-    print(r.json())
-
     response_list = {"booking_id": booking_id, "showing_id": showing_id, "seats": seats_found}
     response = make_response(jsonify(response_list), Status_code_ok)
     return response
@@ -127,33 +112,62 @@ def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
         return generate_response(err.message, Status_code_bad_request)
 
     new_tickets = incoming_json['tickets']
+    booking_id = incoming_json[BoDIO.booking_id]
     tickets_db_instance = dao_factory.create_tickets_object()
+    bookings_db_instance = dao_factory.create_bookings_object()
+    booking = bookings_db_instance.get_booking(booking_id)
+    if not booking:
+        response = generate_response('Booking not found', Status_code_invalid_data)
+        return response
 
     try:
-        tickets_db_instance.update_tickets(new_tickets)
+        updated_tickets = tickets_db_instance.update_tickets(new_tickets)
     except NotFoundInDBException as err:
         return generate_response(err.message, Status_code_not_found)
-    response = generate_response('Tickets successfully updated', Status_code_ok)
+
+    products = []
+    for ticket in updated_tickets:
+        product = {
+            "name": str(ticket[TiDIO.ticket_id]),
+            "unitPrice": str(int(ticket[TiDIO.price] * 100)),
+            "quantity": "1"
+        }
+        products.append(product)
+
+    r = rq.post('https://cinema-payment-service.herokuapp.com/payment', json={
+        "customerIp": "87.99.45.184",
+        "description": "Payment for booking ".format(booking[BoDIO.booking_id]),
+        "refundExpirationDate": datetime.datetime.now().isoformat(),
+        "products": products
+    })
+    if r.ok:
+        response_json = r.json()
+        payment_id = response_json["payUOrderId"]
+        payu_link = response_json["redirectUri"]
+        bookings_db_instance.update_payment_id(booking_id, payment_id)
+        bookings_db_instance.commit()
+        response = make_response(jsonify({"redirectUri": payu_link}), Status_code_ok)
+    else:
+        response = generate_response('Error in payment service', Status_code_denied)
+        return response
+
     return response
 
 
-def cancel_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel):
-    try:
-        incoming_json = validate_bytes_json(bytes, 'jsonschemas/cancel_booking_schema.json')
-    except ValidationError as err:
-        print(err.message)
-        return
+def cancel_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
 
-    booking_id = incoming_json['booking_id']
     bookings_db_instance = dao_factory.create_bookings_object()
     tickets_db_instance = dao_factory.create_tickets_object()
 
-    booking = bookings_db_instance.get_booking(booking_id)
+    booking = bookings_db_instance.get_booking_from_payment_id(payment_id)
+    booking_id = booking[BoDIO.booking_id]
     tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
     json_to_send = {
-        "email": booking[BoDIO.booking_id],
+        "email": booking[BoDIO.email],
         "tickets": tickets,
-        "movie_name": None  # get it from somewhere
+        "movie_name": None,  # get it from somewhere
+        "booking_id": booking[BoDIO.booking_id],
+        "payment_id": booking[BoDIO.payment_id]
     }
 
     bookings_db_instance.delete_booking(booking_id)  # cascade should take care of tickets too
@@ -163,26 +177,23 @@ def cancel_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel)
     return
 
 
-def confirm_booking(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel):
-    try:
-        incoming_json = validate_bytes_json(bytes, 'jsonschemas/confirm_booking_schema.json')
-    except ValidationError as err:
-        print(err.message)
-        return
+def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
 
-    booking_id = incoming_json['booking_id']
-    payment_date = incoming_json['payment_date']
     bookings_db_instance = dao_factory.create_bookings_object()
     tickets_db_instance = dao_factory.create_tickets_object()
 
+    booking = bookings_db_instance.get_booking_from_payment_id(payment_id)
+    booking_id = booking[BoDIO.booking_id]
+    payment_date = bookings_db_instance.get_current_timestamp(timezone=True)
     bookings_db_instance.confirm_payment(booking_id, payment_date)
     bookings_db_instance.commit()
-    booking = bookings_db_instance.get_booking(booking_id)
     tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
     json_to_send = {
-        "email": booking[BoDIO.booking_id],
+        "email": booking[BoDIO.email],
         "tickets": tickets,
-        "movie_name": None  # get it from somewhere
+        "movie_name": None,  # get it from somewhere
+        "booking_id": booking[BoDIO.booking_id],
+        "payment_id": booking[BoDIO.payment_id]
     }
 
     channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, body=json.dumps(json_to_send, cls=JSONEncoder))
