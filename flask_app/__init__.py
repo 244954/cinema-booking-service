@@ -1,7 +1,7 @@
 from flask import Flask
 from models.Models import db
 from flask_app.config import *
-from mqrabbit import *
+from mqrabbit.RabbitChannels import RabbitChannels
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -17,4 +17,5 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['CORS_HEADERS'] = CORS_HEADERS
 
 db.init_app(app)
+rabbit_channels = RabbitChannels(db)
 import flask_app.views  # ugly, but encouraged: https://flask.palletsprojects.com/en/2.1.x/patterns/packages/

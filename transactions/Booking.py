@@ -134,20 +134,23 @@ def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
         }
         products.append(product)
 
+    expire_time = datetime.datetime.now() + datetime.timedelta(minutes=20)
     r = rq.post('https://cinema-payment-service.herokuapp.com/payment', json={
         "customerIp": "87.99.45.184",
         "description": "Payment for booking ".format(booking[BoDIO.booking_id]),
-        "refundExpirationDate": datetime.datetime.now().isoformat(),
+        "refundExpirationDate": expire_time.isoformat(),
         "products": products
     })
     if r.ok:
+        print(r.json())
         response_json = r.json()
-        payment_id = response_json["payUOrderId"]
+        payment_id = response_json["id"]
         payu_link = response_json["redirectUri"]
         bookings_db_instance.update_payment_id(booking_id, payment_id)
         bookings_db_instance.commit()
         response = make_response(jsonify({"redirectUri": payu_link}), Status_code_ok)
     else:
+        print(r.json())
         response = generate_response('Error in payment service', Status_code_denied)
         return response
 

@@ -9,7 +9,7 @@ from utils.AlchemyEncoder import AlchemyEncoder
 
 
 class NotFoundInDBException(Exception):
-    def __init__(self, message, errors):
+    def __init__(self, message):
         super().__init__(message)
         self.message = message
 

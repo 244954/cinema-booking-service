@@ -1,5 +1,5 @@
 import json
-
+import functools
 from DAOs.DAOFactory import SQLAlchemyDAOFactory, DAOFactory
 from flask_app.config import DB_TYPE
 from models.Models import db

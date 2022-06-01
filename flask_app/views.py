@@ -1,5 +1,5 @@
 from flask import request, Response
-from flask_app import app, db, DB_TYPE, channel_publisher
+from flask_app import app, db, DB_TYPE, rabbit_channels
 from transactions.Booking import get_showing_detail, get_showings, select_seats_post, tickets_put, test_post, get_bookings_from_email, delete_booking_by_id
 from transactions.Offer import seats_post, halls_post, showings_post
 from utils.Generators import generate_response
@@ -17,7 +17,7 @@ else:
 @app.route('/test', methods=['POST'])
 def booking():
     if request.method == 'POST':
-        return test_post(dao_factory, request, channel_publisher)
+        return test_post(dao_factory, request, rabbit_channels.channel_publisher)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -73,7 +73,7 @@ def showings_detail(showing_id):
 @app.route('/select_seats', methods=['POST'])
 def select_seats():
     if request.method == 'POST':
-        return select_seats_post(dao_factory, request, channel_publisher)
+        return select_seats_post(dao_factory, request, rabbit_channels.channel_publisher)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
@@ -89,7 +89,7 @@ def create_tickets():
 @app.route('/bookings/<booking_id>', methods=['DELETE'])
 def delete_booking(booking_id):
     if request.method == 'DELETE':
-        return delete_booking_by_id(dao_factory, request, channel_publisher, booking_id)
+        return delete_booking_by_id(dao_factory, request, rabbit_channels.channel_publisher, booking_id)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 

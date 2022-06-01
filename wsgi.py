@@ -8,6 +8,6 @@ if __name__ == '__main__':
     with app.app_context():
         #  drop_everything(db)
         #  db.create_all()
-        thread = Thread(target=start_mqrabbit, args=(connection,))
+        thread = Thread(target=rabbit_channels.start_mqrabbit)
         thread.start()
         app.run(debug=True)
