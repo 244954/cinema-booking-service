@@ -1,3 +1,5 @@
+import sys
+
 from pika.channel import Channel
 from mqrabbit.config import CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, CHANNEL_TEST_QUEUE, \
     CHANNEL_TICKET_NOTIFICATION_QUEUE, CHANNEL_REFUND_QUEUE
@@ -146,6 +148,7 @@ def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
     })
     if r.ok:
         print(r.json())
+        sys.stdout.flush()
         response_json = r.json()
         payment_id = response_json["id"]
         payu_link = response_json["redirectUri"]
@@ -154,6 +157,7 @@ def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
         response = make_response(jsonify({"redirectUri": payu_link}), Status_code_ok)
     else:
         print(r.json())
+        sys.stdout.flush()
         response = generate_response('Error in payment service', Status_code_denied)
         return response
 
@@ -166,6 +170,8 @@ def cancel_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
     tickets_db_instance = dao_factory.create_tickets_object()
 
     booking = bookings_db_instance.get_booking_from_payment_id(payment_id)
+    if not booking:
+        return make_response("Booking not found", Status_code_not_found)
     booking_id = booking[BoDIO.booking_id]
     tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
     json_to_send = {
@@ -189,6 +195,8 @@ def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):  #
     tickets_db_instance = dao_factory.create_tickets_object()
 
     booking = bookings_db_instance.get_booking_from_payment_id(payment_id)
+    if not booking:
+        return make_response("Booking not found", Status_code_not_found)
     booking_id = booking[BoDIO.booking_id]
     payment_date = bookings_db_instance.get_current_timestamp(timezone=True)
     bookings_db_instance.confirm_payment(booking_id, payment_date)
