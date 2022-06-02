@@ -36,8 +36,8 @@ class RabbitChannels:
         self.producer_connection = pika.BlockingConnection(params)  # Connect to CloudAMQP
         self.channel_publisher = self.producer_connection.channel()
         self.channel_publisher.queue_declare(queue=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, durable=True)
-        self.channel_publisher.queue_declare(queue=CHANNEL_REFUND_QUEUE, durable=True,
-                                             arguments={"x-queue-type": "quorum"})
+        self.channel_publisher.queue_declare(queue=CHANNEL_REFUND_QUEUE, durable=True)
+                                             #  arguments={"x-queue-type": "quorum"})
         self.channel_publisher.queue_declare(queue=CHANNEL_TICKET_NOTIFICATION_QUEUE, durable=True)
         self.channel_publisher.queue_declare(queue=CHANNEL_TEST_QUEUE, durable=True)
 
