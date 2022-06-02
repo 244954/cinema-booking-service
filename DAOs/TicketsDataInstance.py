@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from utils.Others import offered_tickets
-from models.Models import Tickets, Tickets_For_Showings, Seats, Halls
+from models.Models import Tickets, Tickets_For_Showings, Seats, Halls, Showings
 from DAOs.HallDataInstance import HallsDataInstanceObject as HaDIO
 from DAOs.SeatsDataInstance import SeatsDataInstanceObject as SeDIO
 from utils.AlchemyEncoder import AlchemyEncoder
@@ -25,6 +25,10 @@ class TicketsDataInstanceObject(ABC):
 
     @abstractmethod
     def get_ticket_for_seat_and_showing(self, seat_id, showing_id):
+        pass
+
+    @abstractmethod
+    def get_movie_id_for_ticket(self, ticket_id):
         pass
 
     @abstractmethod
@@ -64,12 +68,23 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
         else:
             return None
 
+    def get_movie_id_for_ticket(self, ticket_id):
+        showing = Showings.query.join(Tickets_For_Showings).join(Tickets).filter_by(ticket_id=ticket_id).with_entities(
+            Showings.movie_id.label('movie_id')
+        ).first()
+
+        if showing:
+            return showing.movie_id
+        else:
+            return None
+
     def get_tickets_for_booking(self, booking_id):
         tickets = Tickets.query.filter_by(booking_id=booking_id).join(Seats).join(Halls).with_entities(
             Seats.seat_number.label('seat_number'),
             Seats.row_number.label('row_number'),
             Halls.hall_name.label('hall_name'),
-            Tickets.price.label('price')
+            Tickets.price.label('price'),
+            Tickets.ticket_id.label('ticket_id')
         ).all()
 
         tickets_array = []
@@ -79,7 +94,8 @@ class TicketsDataInstanceObjectSQLAlchemy(TicketsDataInstanceObject):
                     SeDIO.seat_number: ticket.seat_number,
                     SeDIO.row_number: ticket.row_number,
                     HaDIO.hall_name: ticket.hall_name,
-                    TicketsDataInstanceObject.price: ticket.price
+                    TicketsDataInstanceObject.price: ticket.price,
+                    TicketsDataInstanceObject.ticket_id: ticket.ticket_id
                 }
             )
         if tickets_array:

@@ -191,10 +191,21 @@ def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):  #
     bookings_db_instance.confirm_payment(booking_id, payment_date)
     bookings_db_instance.commit()
     tickets = tickets_db_instance.get_tickets_for_booking(booking_id)
+    first_ticket = tickets[0]
+    movie_id = tickets_db_instance.get_movie_id_for_ticket(first_ticket[TiDIO.ticket_id])
+
+    r = rq.get('https://cinema-offer.herokuapp.com/movie?movieId={}'.format(movie_id))
+    if r.ok:
+        r_json = r.json()
+        movie_name = r_json['title']
+        print(movie_name)
+    else:
+        movie_name = ""
+
     json_to_send = {
         "email": booking[BoDIO.email],
         "tickets": tickets,
-        "movie_name": None,  # get it from somewhere
+        "movie_name": movie_name,  # get it from somewhere
         "booking_id": booking[BoDIO.booking_id],
         "payment_id": booking[BoDIO.payment_id]
     }

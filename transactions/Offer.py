@@ -71,6 +71,7 @@ def showings_post(dao_factory: DAOFactory, post_request: request, multiple: bool
         else:
             incoming_json = validate_request_json(post_request, 'jsonschemas/schowing_post_from_offer_schema.json')
     except ValidationError as err:
+        print(err.message)
         return generate_response(err.message, Status_code_bad_request)
 
     if 'showings' in incoming_json:
@@ -86,10 +87,18 @@ def showings_post(dao_factory: DAOFactory, post_request: request, multiple: bool
         if found_showing:
             message_list.append({'msg': 'Object already exists', 'id': showing[ShDIO.showing_id]})
         else:
+            if ShDIO.showing_date in showing:
+                showing_date = showing[ShDIO.showing_date]
+                if showing_date > 9999999999:  # milliseconds detector
+                    showing_date = showing_date // 1000
+                    formatted_date = datetime.datetime.fromtimestamp(showing_date)
+                else:
+                    formatted_date = datetime.datetime.fromtimestamp(showing_date)
+            else:
+                formatted_date = None
             showing_db_instance.insert_showing(
                 showing_id=showing[ShDIO.showing_id] if ShDIO.showing_id in showing else None,
-                showing_date=datetime.datetime.fromtimestamp(
-                    showing[ShDIO.showing_date] if ShDIO.showing_date in showing else None),
+                showing_date=formatted_date,
                 hall_id=showing[ShDIO.hall_id] if ShDIO.hall_id in showing else None,
                 movie_id=showing[ShDIO.movie_id] if ShDIO.movie_id in showing else None,
                 subtitles=showing[ShDIO.subtitles] if ShDIO.subtitles in showing else None,

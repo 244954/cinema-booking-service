@@ -75,7 +75,8 @@ class RabbitChannels:
         print('new_showing')
         print(body)
         uri = self.URI + 'offer/showing'
-        r = rq.post(uri, json=body.decode('utf-8'))
+        my_json = json.loads(body.decode('utf-8'))
+        r = rq.post(uri, json=my_json)
 
     def confirm_reservation(self, ch, method, properties, body: bytes):
         print('confirm_reservation')
