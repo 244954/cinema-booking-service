@@ -15,6 +15,7 @@ from jsonschema import ValidationError
 import json
 import requests as rq
 import datetime
+import pytz
 
 
 def test_post(dao_factory: DAOFactory, post_request: request, channel: Channel) -> Response:
@@ -134,11 +135,13 @@ def tickets_put(dao_factory: DAOFactory, post_request: request) -> Response:
         }
         products.append(product)
 
-    expire_time = datetime.datetime.now() + datetime.timedelta(minutes=20)
+    timezone = pytz.timezone("Europe/Warsaw")
+    expire_time = datetime.datetime.now(timezone).replace(tzinfo=None) + datetime.timedelta(minutes=20)
+    formatted_time = expire_time.isoformat()
     r = rq.post('https://cinema-payment-service.herokuapp.com/payment', json={
         "customerIp": "87.99.45.184",
         "description": "Payment for booking ".format(booking[BoDIO.booking_id]),
-        "refundExpirationDate": expire_time.isoformat(),
+        "refundExpirationDate": formatted_time,
         "products": products
     })
     if r.ok:
