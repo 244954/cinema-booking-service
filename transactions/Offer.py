@@ -64,12 +64,12 @@ def seats_post(dao_factory: DAOFactory, post_request: request) -> Response:
     return response
 
 
-def showings_post(dao_factory: DAOFactory, post_request: request, byte_json=None) -> Response:
+def showings_post(dao_factory: DAOFactory, post_request: request, multiple: bool) -> Response:
     try:
-        if byte_json:
-            incoming_json = validate_bytes_json(byte_json, 'jsonschemas/schowing_post_from_offer_schema.json')
-        else:
+        if multiple:
             incoming_json = validate_request_json(post_request, 'jsonschemas/schowings_post_schema.json')
+        else:
+            incoming_json = validate_request_json(post_request, 'jsonschemas/schowing_post_from_offer_schema.json')
     except ValidationError as err:
         return generate_response(err.message, Status_code_bad_request)
 

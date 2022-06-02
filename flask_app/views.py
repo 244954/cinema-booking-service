@@ -41,7 +41,15 @@ def offer_seats():
 @app.route('/offer/showings', methods=['POST'])
 def offer_showings():
     if request.method == 'POST':
-        return showings_post(dao_factory, request)
+        return showings_post(dao_factory, request, True)
+    else:
+        return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
+
+
+@app.route('/offer/showing', methods=['POST'])
+def offer_showing():
+    if request.method == 'POST':
+        return showings_post(dao_factory, request, False)
     else:
         return generate_response('HTTP method {} is not supported'.format(request.method), Status_code_not_found)
 
