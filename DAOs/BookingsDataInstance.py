@@ -71,12 +71,6 @@ class BookingsDataInstanceObjectSQLAlchemy(BookingsDataInstanceObject):
             return None
 
     def get_booking_from_payment_id(self, payment_id):
-        return {
-            BookingsDataInstanceObject.booking_id: 1,
-            BookingsDataInstanceObject.client_id: 1,
-            BookingsDataInstanceObject.email: "",
-            BookingsDataInstanceObject.payment_id: ""
-        }
         booking = Bookings.query.filter_by(payment_id=payment_id).first()
         if booking:
             return {

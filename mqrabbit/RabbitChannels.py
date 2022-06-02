@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pika
+import requests as rq
 from mqrabbit.config import *
 from transactions.Booking import cancel_booking, confirm_booking
 from transactions.Offer import showings_post
@@ -10,11 +11,15 @@ from flask_app.config import DB_TYPE
 
 
 class RabbitChannels:
-    def __init__(self, db):
+    def __init__(self, db, env):
         self.db = db
 
-        self.dao_factory: DAOFactory
+        if env == 'dev':
+            self.URI = 'http://127.0.0.1:5000/'
+        else:
+            self.URI = 'https://cinema-booking-service.herokuapp.com/'
 
+        self.dao_factory: DAOFactory
         if DB_TYPE == 'SQLAlchemy':
             self.dao_factory = SQLAlchemyDAOFactory(db)
         else:
@@ -64,7 +69,8 @@ class RabbitChannels:
         print('cancel_reservation')
         print(body)
         payment_id = body.decode("utf-8")
-        cancel_booking(self.dao_factory, payment_id, self.channel_publisher)
+        uri = self.URI + 'bookings/cancel/' + payment_id
+        r = rq.delete(uri)
 
     def new_showing(self, ch, method, properties, body: bytes):
         print('new_showing')
@@ -75,7 +81,10 @@ class RabbitChannels:
         print('confirm_reservation')
         print(body)
         payment_id = body.decode("utf-8")
-        confirm_booking(self.dao_factory, payment_id, self.channel_publisher)
+        uri = self.URI + 'bookings/confirm/' + payment_id
+        print(uri)
+        r = rq.put(uri)
+        print(r.text)
 
     def test(self, ch, method, properties, body: bytes):
         print('test')

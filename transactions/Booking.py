@@ -177,10 +177,10 @@ def cancel_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
     bookings_db_instance.commit()
 
     channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, body=json.dumps(json_to_send, cls=JSONEncoder))
-    return
+    return make_response("Payment cancelled", Status_code_ok)
 
 
-def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
+def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):  #
 
     bookings_db_instance = dao_factory.create_bookings_object()
     tickets_db_instance = dao_factory.create_tickets_object()
@@ -200,7 +200,7 @@ def confirm_booking(dao_factory: DAOFactory, payment_id, channel: Channel):
     }
 
     channel.basic_publish(exchange='', routing_key=CHANNEL_CANCEL_RESERVATION_NOTIFICATION_QUEUE, body=json.dumps(json_to_send, cls=JSONEncoder))
-    return
+    return make_response("Payment confirmed", Status_code_ok)
 
 
 def delete_booking_by_id(dao_factory: DAOFactory, json_bytes: bytes, channel: Channel, booking_id):

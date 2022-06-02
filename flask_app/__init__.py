@@ -17,5 +17,5 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['CORS_HEADERS'] = CORS_HEADERS
 
 db.init_app(app)
-rabbit_channels = RabbitChannels(db)
+rabbit_channels = RabbitChannels(db, env)
 import flask_app.views  # ugly, but encouraged: https://flask.palletsprojects.com/en/2.1.x/patterns/packages/
